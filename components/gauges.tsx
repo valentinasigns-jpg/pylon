@@ -2,6 +2,7 @@
 
 import { usePoll } from "@/lib/use-poll";
 import { gwei, compact, num, DASH } from "@/lib/format";
+import { Oscillator } from "./oscillator";
 
 type ChainFeed = {
   ok: boolean;
@@ -193,10 +194,10 @@ export function Gauges() {
   const txFrac = txLatest != null ? Math.min(1, txLatest / 40) : null; // 0 → 40 tx
 
   return (
-    // Two full-width bands rather than an auto/1fr split. The arcs are short
-    // and the meters are tall, so side by side left a large void under the
-    // dials and stretched the meters apart.
-    <div className="border border-[color:var(--color-border)] bg-[color:var(--color-border)]">
+    // Full-width bands rather than an auto/1fr split. The arcs are short and
+    // the meters are tall, so side by side left a large void under the dials
+    // and stretched the meters apart.
+    <div className="flex flex-col border border-[color:var(--color-border)] bg-[color:var(--color-border)]">
       {/* band one — dials */}
       <div className="grid grid-cols-3 gap-px">
         <Arc
@@ -220,7 +221,7 @@ export function Gauges() {
       </div>
 
       {/* band two — meters */}
-      <div className="mt-px grid grid-cols-1 gap-px sm:grid-cols-2 xl:grid-cols-4">
+      <div className="mt-px grid shrink-0 grid-cols-1 gap-px sm:grid-cols-2 xl:grid-cols-4">
         <Meter
           label="gas used, latest block"
           value={gasUsed != null ? compact(gasUsed) : DASH}
@@ -254,6 +255,10 @@ export function Gauges() {
           }
         />
       </div>
+
+      {/* band three — closes the panel on something moving rather than on a
+          blank rectangle */}
+      <Oscillator className="mt-px h-[172px]" />
     </div>
   );
 }

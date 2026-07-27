@@ -114,15 +114,9 @@ export function SectionIndex() {
                 >
                   {s.n}
                 </span>
-                <span
-                  className={`whitespace-nowrap text-[10px] uppercase tracking-[0.14em] transition-opacity duration-200 ${
-                    on
-                      ? "text-[color:var(--color-dim)] opacity-100"
-                      : "text-[color:var(--color-dim)] opacity-0 group-hover:opacity-70"
-                  }`}
-                >
-                  {s.label}
-                </span>
+                {/* The name is carried by the link's accessible label rather
+                    than rendered — the rail reads as a scale, not a menu. */}
+                <span className="sr-only">{s.label}</span>
               </a>
             </li>
           );

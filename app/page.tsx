@@ -24,7 +24,10 @@ export default function Home() {
             title="Network"
             sub="Instantaneous readings from the head of the chain. Every gauge states the range it is scaled against — none of them are normalised to look busy."
           />
-          <div className="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)]">
+          {/* items-start so neither panel is stretched to the other's
+              height — a stretched panel just relocates the blank space
+              rather than removing it */}
+          <div className="grid grid-cols-1 items-start gap-6 xl:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)]">
             <Gauges />
             <ChainMonitor />
           </div>

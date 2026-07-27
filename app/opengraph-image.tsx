@@ -42,8 +42,20 @@ export default async function Image() {
         >
           <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
             <svg width="34" height="34" viewBox="0 0 32 32">
-              <path d="M4 27 L16 5 L28 27" fill="none" stroke={ACCENT} strokeWidth="2.4" />
-              <path d="M9.6 17.5 H22.4" stroke={ACCENT} strokeWidth="2.4" />
+              <path d="M8 3.2 V28.8" fill="none" stroke={ACCENT} strokeWidth="2.8" />
+              <path
+                d="M8 3.2 H24 V15 H8"
+                fill="none"
+                stroke={ACCENT}
+                strokeWidth="2.8"
+              />
+              <path
+                d="M8 15 L24 3.2"
+                fill="none"
+                stroke={ACCENT}
+                strokeWidth="1.6"
+                opacity="0.6"
+              />
             </svg>
             <div
               style={{

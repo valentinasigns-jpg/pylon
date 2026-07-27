@@ -22,15 +22,20 @@ export default function AppleIcon() {
         }}
       >
         <svg width="128" height="128" viewBox="0 0 180 180">
+          <path d="M46 18 V162" fill="none" stroke="#00FF9C" strokeWidth="16" />
           <path
-            d="M26 148 L90 30 L154 148"
+            d="M46 18 H134 V84 H46"
             fill="none"
             stroke="#00FF9C"
-            strokeWidth="12"
+            strokeWidth="16"
           />
-          <path d="M56 93 H124" stroke="#00FF9C" strokeWidth="12" />
-          <path d="M90 30 V148" stroke="#00FF9C" strokeWidth="5" opacity="0.5" />
-          <circle cx="90" cy="30" r="9" fill="#00FF9C" />
+          <path
+            d="M46 84 L134 18"
+            fill="none"
+            stroke="#00FF9C"
+            strokeWidth="8"
+            opacity="0.5"
+          />
         </svg>
       </div>
     ),

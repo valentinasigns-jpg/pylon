@@ -102,12 +102,29 @@ export function Header() {
   );
 }
 
+/**
+ * A P built as a pylon: one mast the full height of the glyph, a bowl that
+ * is a braced frame hung off it. The old mark was an apex and a tie — next
+ * to the word it read as an A.
+ *
+ * The brace carries half the weight of the frame, the same relationship the
+ * previous mark used for its secondary line. Everything is stroked; there
+ * are no fills to collapse at small sizes.
+ */
 function PylonMark() {
   return (
     <svg width="18" height="18" viewBox="0 0 18 18" aria-hidden>
-      <path d="M2 16 L9 2 L16 16" fill="none" stroke="#00FF9C" strokeWidth="1.6" />
-      <path d="M5.2 10.5 H12.8" stroke="#00FF9C" strokeWidth="1.6" />
-      <path d="M9 2 V16" stroke="#00FF9C" strokeWidth="0.8" opacity="0.5" />
+      <g fill="none" stroke="#00FF9C" strokeWidth="1.6">
+        <path d="M4.6 1.8 V16.2" />
+        <path d="M4.6 1.8 H13.4 V8.4 H4.6" />
+      </g>
+      <path
+        d="M4.6 8.4 L13.4 1.8"
+        fill="none"
+        stroke="#00FF9C"
+        strokeWidth="0.8"
+        opacity="0.5"
+      />
     </svg>
   );
 }

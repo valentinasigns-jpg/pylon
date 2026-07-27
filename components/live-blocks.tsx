@@ -53,11 +53,12 @@ export function LiveBlocks({ limit = 15 }: { limit?: number }) {
         right={<LivePill live={live} />}
       />
 
-      {/* desktop table */}
-      <div className="hidden border border-[color:var(--color-border)] md:block">
+      {/* desktop table — opaque so the background grid cannot bleed through
+          the data */}
+      <div className="hidden border border-[color:var(--color-border)] bg-[color:var(--color-surface)] md:block">
         <table className="w-full border-collapse">
           <thead>
-            <tr className="border-b border-[color:var(--color-border)] bg-[color:var(--color-surface)]">
+            <tr className="border-b border-[color:var(--color-border)] bg-[color:var(--color-raised)]">
               {["Block", "Txns", "Gas used", "Base fee", "Age"].map((h, i) => (
                 <th
                   key={h}
@@ -96,7 +97,7 @@ export function LiveBlocks({ limit = 15 }: { limit?: number }) {
             {blocks.map((b) => (
               <tr
                 key={b.number}
-                className={`border-b border-[color:var(--color-border)] last:border-b-0 hover:bg-[color:var(--color-surface)] ${
+                className={`border-b border-[color:var(--color-border)] last:border-b-0 hover:bg-[color:var(--color-raised)] ${
                   fresh.has(b.number) ? "slide-in" : ""
                 }`}
               >

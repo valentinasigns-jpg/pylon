@@ -15,7 +15,7 @@ export function WidgetFrame({
   footer?: ReactNode;
 }) {
   return (
-    <div className="relative border border-[color:var(--color-border)] bg-[color:var(--color-surface)]/70 backdrop-blur-[2px]">
+    <div className="relative border border-[color:var(--color-border)] bg-[color:var(--color-surface)]">
       <div className="flex items-center justify-between border-b border-[color:var(--color-border)] px-3 py-2">
         <div className="flex items-center gap-2">
           <span className="flex gap-1" aria-hidden>

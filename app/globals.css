@@ -3,6 +3,8 @@
 @theme {
   --color-bg: #0a0a0a;
   --color-surface: #121212;
+  /* one step above surface, for table headers and row hover */
+  --color-raised: #191919;
   --color-border: #1f1f1f;
   --color-fg: #ededed;
   --color-dim: #7a7a7a;

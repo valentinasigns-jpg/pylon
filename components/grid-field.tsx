@@ -143,18 +143,20 @@ export function GridField() {
             const dy = y + CELL / 2 - py;
             const d = Math.sqrt(dx * dx + dy * dy);
             if (d > RADIUS) continue;
-            // smooth falloff, squared for a tighter core
-            const f = (1 - d / RADIUS) ** 2;
-            if (f < 0.01) continue;
-            ctx.fillStyle = `rgba(0,255,156,${(f * 0.10).toFixed(4)})`;
+            // smoothstep falloff — softer shoulder than a plain power curve,
+            // so the lit patch reads as a glow rather than a block of tiles
+            const u = 1 - d / RADIUS;
+            const f = u * u * (3 - 2 * u);
+            if (f < 0.015) continue;
+            ctx.fillStyle = `rgba(0,255,156,${(f * 0.065).toFixed(4)})`;
             ctx.fillRect(x + 1, y + 1, CELL - 1, CELL - 1);
           }
         }
 
         // --- 3. grid lines brighten near the pointer ---
         const g = ctx.createRadialGradient(px, py, 0, px, py, RADIUS);
-        g.addColorStop(0, "rgba(0,255,156,0.46)");
-        g.addColorStop(0.4, "rgba(0,255,156,0.16)");
+        g.addColorStop(0, "rgba(0,255,156,0.38)");
+        g.addColorStop(0.4, "rgba(0,255,156,0.13)");
         g.addColorStop(1, "rgba(0,255,156,0)");
         ctx.strokeStyle = g;
         ctx.lineWidth = 1;
@@ -169,9 +171,9 @@ export function GridField() {
         ctx.fillRect(px - RADIUS, py - RADIUS, RADIUS * 2, RADIUS * 2);
 
         // --- 4b. the cell under the pointer ---
-        ctx.fillStyle = "rgba(0,255,156,0.10)";
+        ctx.fillStyle = "rgba(0,255,156,0.07)";
         ctx.fillRect(hotX + 1, hotY + 1, CELL - 1, CELL - 1);
-        ctx.strokeStyle = "rgba(0,255,156,0.55)";
+        ctx.strokeStyle = "rgba(0,255,156,0.45)";
         ctx.lineWidth = 1;
         ctx.strokeRect(hotX + 0.5, hotY + 0.5, CELL, CELL);
 

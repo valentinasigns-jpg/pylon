@@ -25,10 +25,10 @@ export default function StocksPage() {
         <h2 className="h-display mb-3 text-[13px] text-[color:var(--color-accent)]">
           Contract addresses
         </h2>
-        <div className="overflow-x-auto border border-[color:var(--color-border)]">
+        <div className="overflow-x-auto border border-[color:var(--color-border)] bg-[color:var(--color-surface)]">
           <table className="w-full border-collapse">
             <thead>
-              <tr className="border-b border-[color:var(--color-border)] bg-[color:var(--color-surface)]">
+              <tr className="border-b border-[color:var(--color-border)] bg-[color:var(--color-raised)]">
                 <th className="px-4 py-2.5 text-left text-[11px] font-normal uppercase tracking-[0.14em] text-[color:var(--color-dim)]">
                   Symbol
                 </th>
@@ -44,7 +44,7 @@ export default function StocksPage() {
               {STOCK_TOKENS.map((t) => (
                 <tr
                   key={t.symbol}
-                  className="border-b border-[color:var(--color-border)] last:border-b-0 hover:bg-[color:var(--color-surface)]"
+                  className="border-b border-[color:var(--color-border)] last:border-b-0 hover:bg-[color:var(--color-raised)]"
                 >
                   <td className="px-4 py-3 text-[13px] text-[color:var(--color-fg)]">
                     {t.symbol}

@@ -85,6 +85,26 @@ const endpoints = [
 }`,
   },
   {
+    path: "/api/health",
+    desc: "Probes each upstream independently and reports status, latency, the serving region and current server-cache ages. Rendered for humans at /status.",
+    shape: `{
+  "ok": true,
+  "ts": 1785178630269,
+  "region": "iad1",
+  "sources": [
+    {
+      "id": "rpc",
+      "label": "JSON-RPC",
+      "url": "https://rpc.mainnet.chain.robinhood.com",
+      "status": "up",
+      "latencyMs": 82,
+      "detail": "chain id 4663"
+    }
+  ],
+  "cacheAgeMs": { "chain": 1200, "blocks": 800 }
+}`,
+  },
+  {
     path: "/api/search?q=",
     desc: "Dispatches on the shape of the query: digits → block, 66 chars → transaction, 42 chars → address.",
     shape: `GET /api/search?q=20754129

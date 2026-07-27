@@ -15,6 +15,7 @@ const cols: Array<{ head: string; items: Array<{ label: string; href: string; ex
     head: "Data",
     items: [
       { label: "API docs", href: "/docs" },
+      { label: "Upstream status", href: "/status" },
       // The RPC endpoint accepts POST only — linking it straight from the
       // footer just hands the visitor a parse error. Point at the docs page,
       // which shows the URL as copyable code instead.

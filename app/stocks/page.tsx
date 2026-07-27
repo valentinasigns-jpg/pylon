@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { StocksGrid } from "@/components/stocks-grid";
 import { PageShell } from "@/components/page-shell";
+import { WStockTape } from "@/components/w-stock-tape";
 import { STOCK_TOKENS, BLOCKSCOUT, CHAIN } from "@/lib/config";
 import { truncMid } from "@/lib/format";
 
@@ -16,6 +17,7 @@ export default function StocksPage() {
       index="04"
       title="Tokenized equities"
       lede={`Equity tokens issued as ERC-20 contracts on ${CHAIN.name}. Everything here describes the on-chain token — its price feed, its holder count, its traded volume — not the underlying security on any exchange.`}
+      aside={<WStockTape />}
     >
       <StocksGrid />
 

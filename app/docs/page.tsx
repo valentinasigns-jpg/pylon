@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { PageShell } from "@/components/page-shell";
+import { WPylonMast } from "@/components/w-pylon-mast";
 import { RPC_URL, BLOCKSCOUT, CHAIN } from "@/lib/config";
 
 export const metadata: Metadata = {
@@ -99,6 +100,7 @@ export default function DocsPage() {
       index="07"
       title="API"
       lede="Every panel on this site is fed by a route handler that proxies a public endpoint. Those handlers are open — no key, no auth, no rate limit beyond what the upstream imposes. Responses are JSON and always carry an ok flag."
+      aside={<WPylonMast />}
     >
       <section>
         <div className="grid grid-cols-1 gap-px border border-[color:var(--color-border)] bg-[color:var(--color-border)] sm:grid-cols-2">

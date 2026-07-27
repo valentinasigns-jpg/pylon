@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { PageShell, Prose } from "@/components/page-shell";
+import { WPylonMast } from "@/components/w-pylon-mast";
 import { CHAIN, RPC_URL, BLOCKSCOUT } from "@/lib/config";
 
 export const metadata: Metadata = {
@@ -15,6 +16,7 @@ export default function AboutPage() {
       index="06"
       title="About"
       lede={`PYLON is a public, read-only dashboard for ${CHAIN.name}. It exists because watching a chain should not require an account.`}
+      aside={<WPylonMast />}
     >
       <section>
         <Prose>

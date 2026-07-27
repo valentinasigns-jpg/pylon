@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { LiveBlocks } from "@/components/live-blocks";
 import { PageShell } from "@/components/page-shell";
+import { WBlockCore } from "@/components/w-block-core";
 import { CHAIN, RPC_URL } from "@/lib/config";
 
 export const metadata: Metadata = {
@@ -15,6 +16,7 @@ export default function BlocksPage() {
       index="02"
       title="Blocks"
       lede={`Every block sealed on ${CHAIN.name}, newest first. Each row is a direct read of eth_getBlockByNumber against the public RPC — no indexer sits in between.`}
+      aside={<WBlockCore />}
     >
       <LiveBlocks limit={15} />
 

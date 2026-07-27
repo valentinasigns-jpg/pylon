@@ -4,29 +4,46 @@ export function PageShell({
   index,
   title,
   lede,
+  aside,
   children,
 }: {
   index: string;
   title: string;
   lede?: string;
+  /** Live widget rendered in the right column of the header. */
+  aside?: ReactNode;
   children: ReactNode;
 }) {
   return (
     <main>
       <section className="relative overflow-hidden border-b border-[color:var(--color-border)]">
-        <div aria-hidden className="hero-grid absolute inset-0" />
-        <div className="relative mx-auto max-w-[1400px] px-4 py-12 sm:px-6 sm:py-16">
-          <div className="text-[11px] uppercase tracking-[0.14em] text-[color:var(--color-accent)]">
-            [{index}]
+        <div aria-hidden className="hero-glow absolute inset-0" />
+        <div aria-hidden className="sweep absolute inset-0" />
+
+        <div className="relative mx-auto max-w-[1400px] px-4 py-12 sm:px-6 sm:py-14">
+          <div
+            className={
+              aside
+                ? "grid grid-cols-1 items-center gap-10 lg:grid-cols-[minmax(0,1.15fr)_minmax(0,0.85fr)] lg:gap-14"
+                : ""
+            }
+          >
+            <div>
+              <div className="text-[11px] uppercase tracking-[0.14em] text-[color:var(--color-accent)]">
+                [{index}]
+              </div>
+              <h1 className="h-display mt-2 text-3xl text-[color:var(--color-fg)] sm:text-5xl">
+                {title}
+              </h1>
+              {lede && (
+                <p className="mt-4 max-w-[62ch] text-[13px] leading-relaxed text-[color:var(--color-dim)] sm:text-sm">
+                  {lede}
+                </p>
+              )}
+            </div>
+
+            {aside && <div className="lg:pl-4">{aside}</div>}
           </div>
-          <h1 className="h-display mt-2 text-3xl text-[color:var(--color-fg)] sm:text-5xl">
-            {title}
-          </h1>
-          {lede && (
-            <p className="mt-4 max-w-[70ch] text-[13px] leading-relaxed text-[color:var(--color-dim)] sm:text-sm">
-              {lede}
-            </p>
-          )}
         </div>
       </section>
 

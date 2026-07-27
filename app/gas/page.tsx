@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { GasChart } from "@/components/gas-chart";
 import { PageShell } from "@/components/page-shell";
+import { WGasScope } from "@/components/w-gas-scope";
 import { CHAIN } from "@/lib/config";
 
 export const metadata: Metadata = {
@@ -15,6 +16,7 @@ export default function GasPage() {
       index="03"
       title="Gas"
       lede={`Base fee per gas across recent blocks on ${CHAIN.name}. Sampled every fourth block so the window covers a meaningful stretch of chain history rather than a single second.`}
+      aside={<WGasScope />}
     >
       <GasChart />
 

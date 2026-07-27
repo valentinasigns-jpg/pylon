@@ -3,6 +3,7 @@ import { JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import { Header } from "@/components/header";
 import { Footer } from "@/components/footer";
+import { GridField } from "@/components/grid-field";
 
 const jetbrains = JetBrains_Mono({
   subsets: ["latin"],
@@ -50,6 +51,7 @@ export default function RootLayout({
   return (
     <html lang="en" className={jetbrains.variable}>
       <body>
+        <GridField />
         <Header />
         {children}
         <Footer />

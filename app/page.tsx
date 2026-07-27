@@ -10,7 +10,7 @@ import { CHAIN, RPC_URL, BLOCKSCOUT } from "@/lib/config";
 
 export default function Home() {
   return (
-    <main className="page-bg">
+    <main>
       <Hero />
 
       <div className="mx-auto max-w-[1400px] space-y-14 px-4 py-14 sm:px-6">

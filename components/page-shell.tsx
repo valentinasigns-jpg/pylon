@@ -7,7 +7,8 @@ export function PageShell({
   aside,
   children,
 }: {
-  index: string;
+  /** Omit where the number is decoration rather than sequence. */
+  index?: string;
   title: string;
   lede?: string;
   /** Live widget rendered in the right column of the header. */
@@ -29,9 +30,11 @@ export function PageShell({
             }
           >
             <div>
-              <div className="text-[11px] uppercase tracking-[0.14em] text-[color:var(--color-accent)]">
-                [{index}]
-              </div>
+              {index && (
+                <div className="text-[11px] uppercase tracking-[0.14em] text-[color:var(--color-accent)]">
+                  [{index}]
+                </div>
+              )}
               <h1 className="h-display mt-2 text-3xl text-[color:var(--color-fg)] sm:text-5xl">
                 {title}
               </h1>

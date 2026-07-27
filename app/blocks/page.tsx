@@ -3,6 +3,7 @@ import { LiveBlocks } from "@/components/live-blocks";
 import { PageShell } from "@/components/page-shell";
 import { WBlockCore } from "@/components/w-block-core";
 import { Endpoint } from "@/components/endpoint";
+import { SiblingLinks } from "@/components/sibling-links";
 import { CHAIN, RPC_URL } from "@/lib/config";
 
 export const metadata: Metadata = {
@@ -20,6 +21,8 @@ export default function BlocksPage() {
       aside={<WBlockCore />}
     >
       <LiveBlocks limit={15} />
+
+      <SiblingLinks current="blocks" />
 
       <section>
         <div className="border border-[color:var(--color-border)] bg-[color:var(--color-surface)] p-5 sm:p-6">

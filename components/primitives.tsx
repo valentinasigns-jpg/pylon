@@ -26,7 +26,8 @@ export function SectionHead({
   sub,
   right,
 }: {
-  index: string;
+  /** Omit where the number is decoration rather than sequence. */
+  index?: string;
   title: string;
   sub?: string;
   right?: ReactNode;
@@ -35,9 +36,11 @@ export function SectionHead({
     <div className="mb-4 flex flex-wrap items-end justify-between gap-3 border-b border-[color:var(--color-border)] pb-3">
       <div>
         <div className="flex items-baseline gap-3">
-          <span className="text-[11px] text-[color:var(--color-accent)]">
-            [{index}]
-          </span>
+          {index && (
+            <span className="text-[11px] text-[color:var(--color-accent)]">
+              [{index}]
+            </span>
+          )}
           <h2 className="h-display text-lg text-[color:var(--color-fg)] sm:text-xl">
             {title}
           </h2>

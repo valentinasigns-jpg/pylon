@@ -8,7 +8,6 @@ const SECTIONS = [
   { id: "gas", n: "03", label: "Base fee" },
   { id: "stocks", n: "04", label: "Equities" },
   { id: "search", n: "05", label: "Search" },
-  { id: "about", n: "06", label: "About" },
 ];
 
 /**
@@ -24,8 +23,15 @@ const SECTIONS = [
  */
 export function SectionIndex() {
   const [active, setActive] = useState<string>("network");
+  // The rail belongs to the dashboard. On pages that do not carry these
+  // sections it would be a scale against nothing.
+  const [present, setPresent] = useState(false);
 
   useEffect(() => {
+    const found = SECTIONS.filter((s) => document.getElementById(s.id)).length;
+    if (found < 2) return;
+    setPresent(true);
+
     const measure = () => {
       const line = window.innerHeight * 0.3;
       let current = SECTIONS[0].id;
@@ -82,6 +88,8 @@ export function SectionIndex() {
       window.removeEventListener("resize", measure);
     };
   }, []);
+
+  if (!present) return null;
 
   return (
     <nav

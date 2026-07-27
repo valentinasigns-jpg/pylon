@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { usePoll } from "@/lib/use-poll";
 import { num, gwei, compact, DASH } from "@/lib/format";
 import { CHAIN } from "@/lib/config";
@@ -177,6 +178,21 @@ export function Hero() {
               stale={stale}
               className="mt-3"
             />
+
+            <div className="mt-6 flex flex-wrap items-center gap-3">
+              <Link
+                href="/app"
+                className="border border-[color:var(--color-accent)]/50 px-4 py-2 text-[11px] uppercase tracking-[0.18em] text-[color:var(--color-accent)] transition-colors hover:bg-[color:var(--color-accent)] hover:text-[color:var(--color-bg)]"
+              >
+                open dashboard
+              </Link>
+              <Link
+                href="/docs"
+                className="border border-[color:var(--color-border)] px-4 py-2 text-[11px] uppercase tracking-[0.18em] text-[color:var(--color-dim)] transition-colors hover:border-[color:var(--color-accent)] hover:text-[color:var(--color-accent)]"
+              >
+                api
+              </Link>
+            </div>
           </div>
 
           {/* right: the living form — a wireframe surface driven by the

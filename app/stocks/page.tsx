@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { StocksGrid } from "@/components/stocks-grid";
 import { PageShell } from "@/components/page-shell";
 import { WStockTape } from "@/components/w-stock-tape";
+import { SiblingLinks } from "@/components/sibling-links";
 import { STOCK_TOKENS, BLOCKSCOUT, CHAIN } from "@/lib/config";
 import { truncMid } from "@/lib/format";
 
@@ -20,6 +21,8 @@ export default function StocksPage() {
       aside={<WStockTape />}
     >
       <StocksGrid />
+
+      <SiblingLinks current="stocks" />
 
       <section>
         <h2 className="h-display mb-3 text-[13px] text-[color:var(--color-accent)]">

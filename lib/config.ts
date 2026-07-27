@@ -46,6 +46,7 @@ export const STOCK_TOKENS: Array<{ symbol: string; address: string }> = [
 ];
 
 export const NAV = [
+  { label: "Dashboard", href: "/app" },
   { label: "Blocks", href: "/blocks" },
   { label: "Gas", href: "/gas" },
   { label: "Stocks", href: "/stocks" },

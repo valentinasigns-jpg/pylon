@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { GasChart } from "@/components/gas-chart";
 import { PageShell } from "@/components/page-shell";
 import { WGasScope } from "@/components/w-gas-scope";
+import { SiblingLinks } from "@/components/sibling-links";
 import { CHAIN } from "@/lib/config";
 
 export const metadata: Metadata = {
@@ -19,6 +20,8 @@ export default function GasPage() {
       aside={<WGasScope />}
     >
       <GasChart />
+
+      <SiblingLinks current="gas" />
 
       <section>
         <div className="grid grid-cols-1 gap-px border border-[color:var(--color-border)] bg-[color:var(--color-border)] lg:grid-cols-2">

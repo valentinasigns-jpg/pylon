@@ -5,6 +5,7 @@ import { num, gwei, compact, DASH } from "@/lib/format";
 import { CHAIN } from "@/lib/config";
 import { LivePill, Skeleton } from "./primitives";
 import { ChainForm } from "./chain-form";
+import { Metric, Sparkline } from "./metric";
 
 type ChainFeed = {
   ok: boolean;
@@ -24,26 +25,38 @@ type ChainFeed = {
 export function Hero() {
   const { data, live, loading } = usePoll<ChainFeed>("/api/chain");
 
-  const tiles = [
+  const tiles: Array<{
+    label: string;
+    hint: string;
+    metric?: { value: number | null; format: (n: number | null) => string };
+    text?: string;
+    accent?: boolean;
+  }> = [
     {
       label: "Block height",
-      value: data?.height != null ? num(data.height) : DASH,
       hint: "latest sealed block",
+      metric: {
+        value: data?.height ?? null,
+        format: (n) => num(n === null ? null : Math.round(n)),
+      },
     },
     {
       label: "Gas price",
-      value: data?.gasPriceWei != null ? `${gwei(data.gasPriceWei)}` : DASH,
       hint: "gwei · eth_gasPrice",
+      metric: { value: data?.gasPriceWei ?? null, format: (n) => gwei(n) },
     },
     {
       label: "Tx in latest block",
-      value: data?.txInLatest != null ? num(data.txInLatest) : DASH,
       hint: "transactions sealed",
+      metric: {
+        value: data?.txInLatest ?? null,
+        format: (n) => num(n === null ? null : Math.round(n)),
+      },
     },
     {
       label: "Chain status",
-      value: live ? "OPERATIONAL" : DASH,
       hint: live ? `chain id ${CHAIN.id}` : "no response from rpc",
+      text: live ? "OPERATIONAL" : DASH,
       accent: live,
     },
   ];
@@ -90,9 +103,15 @@ export function Hero() {
                   <div className="truncate text-[10px] uppercase tracking-[0.13em] text-[color:var(--color-dim)]">
                     {t.label}
                   </div>
-                  <div className="mt-2.5 h-7">
+                  <div className="mt-2.5 flex h-7 items-center">
                     {loading ? (
                       <Skeleton className="h-6 w-20" />
+                    ) : t.metric ? (
+                      <Metric
+                        value={t.metric.value}
+                        format={t.metric.format}
+                        className="truncate leading-none text-[color:var(--color-fg)]"
+                      />
                     ) : (
                       <div
                         className={`truncate text-[22px] leading-none ${
@@ -101,10 +120,17 @@ export function Hero() {
                             : "text-[color:var(--color-fg)]"
                         }`}
                       >
-                        {t.value}
+                        {t.text}
                       </div>
                     )}
                   </div>
+                  {/* readings taken since this page opened — starts empty,
+                      nothing is back-filled */}
+                  {t.metric ? (
+                    <Sparkline value={t.metric.value} className="mt-1" />
+                  ) : (
+                    <div className="mt-1 h-5" aria-hidden />
+                  )}
                   <div className="mt-1 truncate text-[10px] text-[color:var(--color-dim)]">
                     {t.hint}
                   </div>
@@ -127,13 +153,16 @@ export function Hero() {
                   <div className="truncate text-[9px] uppercase tracking-[0.13em] text-[color:var(--color-dim)]">
                     {x.l}
                   </div>
-                  <div className="mt-1 h-4 text-[13px] text-[color:var(--color-fg)]">
+                  <div className="mt-1 flex h-4 items-center text-[color:var(--color-fg)]">
                     {loading ? (
                       <Skeleton className="h-3.5 w-16" />
-                    ) : x.v != null ? (
-                      compact(x.v)
                     ) : (
-                      DASH
+                      <Metric
+                        value={x.v ?? null}
+                        format={compact}
+                        size="sm"
+                        className="leading-none"
+                      />
                     )}
                   </div>
                 </div>

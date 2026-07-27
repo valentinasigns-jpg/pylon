@@ -50,8 +50,7 @@ export function Hero() {
 
   return (
     <section className="relative overflow-hidden border-b border-[color:var(--color-border)]">
-      {/* layered background */}
-      <div aria-hidden className="hero-grid absolute inset-0" />
+      {/* layered background — the grid itself comes from the global canvas */}
       <div aria-hidden className="hero-glow absolute inset-0" />
       <div aria-hidden className="hero-scan absolute inset-0" />
       <div aria-hidden className="sweep absolute inset-0" />

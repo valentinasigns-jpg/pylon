@@ -15,8 +15,19 @@ const jetbrains = JetBrains_Mono({
   display: "swap",
 });
 
+/**
+ * Absolute URLs in the metadata (notably og:image) have to point at the
+ * host this deployment actually answers on. Hardcoding one meant the OG
+ * card resolved against a domain this project does not own.
+ */
+const siteUrl = process.env.VERCEL_PROJECT_PRODUCTION_URL
+  ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`
+  : process.env.VERCEL_URL
+    ? `https://${process.env.VERCEL_URL}`
+    : "http://localhost:3000";
+
 export const metadata: Metadata = {
-  metadataBase: new URL("https://pylon.vercel.app"),
+  metadataBase: new URL(siteUrl),
   title: {
     default: "PYLON — Every block on Robinhood Chain, as it lands",
     template: "%s — PYLON",

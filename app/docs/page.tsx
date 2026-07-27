@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { PageShell } from "@/components/page-shell";
 import { WPylonMast } from "@/components/w-pylon-mast";
+import { Endpoint } from "@/components/endpoint";
 import { RPC_URL, BLOCKSCOUT, CHAIN } from "@/lib/config";
 
 export const metadata: Metadata = {
@@ -105,30 +106,38 @@ export default function DocsPage() {
       <section>
         <div className="grid grid-cols-1 gap-px border border-[color:var(--color-border)] bg-[color:var(--color-border)] sm:grid-cols-2">
           <div className="bg-[color:var(--color-surface)] p-5">
-            <div className="text-[11px] uppercase tracking-[0.14em] text-[color:var(--color-dim)]">
+            <div className="mb-2 text-[11px] uppercase tracking-[0.14em] text-[color:var(--color-dim)]">
               Upstream RPC
             </div>
-            <a
-              href={RPC_URL}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="mt-2 block break-all text-[13px] text-[color:var(--color-accent)] hover:underline"
-            >
-              {RPC_URL}
-            </a>
+            <Endpoint
+              url={RPC_URL}
+              method="POST"
+              note="JSON-RPC 2.0. This is not a web page — a browser GET sends an empty body and the node answers with a parse error. Send a POST with a JSON body."
+            />
           </div>
           <div className="bg-[color:var(--color-surface)] p-5">
-            <div className="text-[11px] uppercase tracking-[0.14em] text-[color:var(--color-dim)]">
+            <div className="mb-2 text-[11px] uppercase tracking-[0.14em] text-[color:var(--color-dim)]">
               Upstream explorer
             </div>
-            <a
-              href={BLOCKSCOUT}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="mt-2 block break-all text-[13px] text-[color:var(--color-accent)] hover:underline"
-            >
-              {BLOCKSCOUT}
-            </a>
+            <div className="border border-[color:var(--color-border)] bg-[color:var(--color-bg)]">
+              <div className="flex items-stretch">
+                <span className="flex shrink-0 items-center border-r border-[color:var(--color-border)] px-2 text-[10px] uppercase tracking-[0.14em] text-[color:var(--color-accent)]">
+                  GET
+                </span>
+                <a
+                  href={BLOCKSCOUT}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="min-w-0 flex-1 overflow-x-auto whitespace-nowrap px-2.5 py-2 text-[12px] text-[color:var(--color-accent)] hover:underline"
+                >
+                  {BLOCKSCOUT} ↗
+                </a>
+              </div>
+              <p className="border-t border-[color:var(--color-border)] px-2.5 py-1.5 text-[10px] leading-relaxed text-[color:var(--color-dim)]">
+                A normal site, and a REST API under /api/v2. Safe to open in a
+                browser.
+              </p>
+            </div>
           </div>
         </div>
       </section>

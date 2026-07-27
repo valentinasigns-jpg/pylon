@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { CHAIN, GITHUB_URL, X_HANDLE, RPC_URL, BLOCKSCOUT } from "@/lib/config";
+import { CHAIN, GITHUB_URL, X_HANDLE, BLOCKSCOUT } from "@/lib/config";
 
 const cols: Array<{ head: string; items: Array<{ label: string; href: string; ext?: boolean }> }> = [
   {
@@ -15,7 +15,10 @@ const cols: Array<{ head: string; items: Array<{ label: string; href: string; ex
     head: "Data",
     items: [
       { label: "API docs", href: "/docs" },
-      { label: "JSON-RPC endpoint", href: RPC_URL, ext: true },
+      // The RPC endpoint accepts POST only — linking it straight from the
+      // footer just hands the visitor a parse error. Point at the docs page,
+      // which shows the URL as copyable code instead.
+      { label: "RPC endpoint", href: "/docs" },
       { label: "Blockscout explorer", href: BLOCKSCOUT, ext: true },
     ],
   },

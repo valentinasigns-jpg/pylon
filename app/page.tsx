@@ -5,6 +5,7 @@ import { GasChart } from "@/components/gas-chart";
 import { StocksGrid } from "@/components/stocks-grid";
 import { SearchPanel } from "@/components/search-panel";
 import { Gauges } from "@/components/gauges";
+import { Endpoint } from "@/components/endpoint";
 import { SectionHead } from "@/components/primitives";
 import { CHAIN, RPC_URL, BLOCKSCOUT } from "@/lib/config";
 
@@ -64,25 +65,18 @@ export default function Home() {
               </h3>
               <dl className="mt-3 space-y-3">
                 <div>
-                  <dt className="text-[11px] uppercase tracking-[0.12em] text-[color:var(--color-dim)]">
+                  <dt className="mb-1.5 text-[11px] uppercase tracking-[0.12em] text-[color:var(--color-dim)]">
                     Blocks, gas, search
                   </dt>
-                  <dd className="mt-1 break-all text-[12px] text-[color:var(--color-fg)]">
-                    <a
-                      href={RPC_URL}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="hover:text-[color:var(--color-accent)]"
-                    >
-                      {RPC_URL} ↗
-                    </a>
+                  <dd>
+                    <Endpoint url={RPC_URL} method="POST" />
                   </dd>
                 </div>
                 <div>
-                  <dt className="text-[11px] uppercase tracking-[0.12em] text-[color:var(--color-dim)]">
+                  <dt className="mb-1.5 text-[11px] uppercase tracking-[0.12em] text-[color:var(--color-dim)]">
                     Aggregates, tokens
                   </dt>
-                  <dd className="mt-1 break-all text-[12px] text-[color:var(--color-fg)]">
+                  <dd className="break-all text-[12px] text-[color:var(--color-fg)]">
                     <a
                       href={BLOCKSCOUT}
                       target="_blank"

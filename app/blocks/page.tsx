@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { LiveBlocks } from "@/components/live-blocks";
 import { PageShell } from "@/components/page-shell";
 import { WBlockCore } from "@/components/w-block-core";
+import { Endpoint } from "@/components/endpoint";
 import { CHAIN, RPC_URL } from "@/lib/config";
 
 export const metadata: Metadata = {
@@ -28,17 +29,9 @@ export default function BlocksPage() {
           <ul className="mt-3 max-w-[76ch] list-none space-y-2 text-[13px] leading-relaxed text-[color:var(--color-dim)]">
             <li>
               <span className="text-[color:var(--color-fg)]">Source.</span>{" "}
-              A batched JSON-RPC call to{" "}
-              <a
-                href={RPC_URL}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-[color:var(--color-accent)] hover:underline"
-              >
-                {RPC_URL}
-              </a>
-              , issued server-side so the browser never talks to the node
-              directly.
+              A batched JSON-RPC call issued server-side, so the browser never
+              talks to the node directly.
+              <Endpoint url={RPC_URL} method="POST" className="mt-2 max-w-xl" />
             </li>
             <li>
               <span className="text-[color:var(--color-fg)]">Cadence.</span>{" "}

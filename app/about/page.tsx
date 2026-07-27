@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { PageShell, Prose } from "@/components/page-shell";
 import { WPylonMast } from "@/components/w-pylon-mast";
+import { Endpoint } from "@/components/endpoint";
 import { CHAIN, RPC_URL, BLOCKSCOUT } from "@/lib/config";
 
 export const metadata: Metadata = {
@@ -39,14 +40,17 @@ export default function AboutPage() {
             Two public endpoints, both free and both unauthenticated:
           </p>
           <p>
-            <strong>JSON-RPC</strong> —{" "}
-            <a href={RPC_URL} target="_blank" rel="noopener noreferrer">
-              {RPC_URL}
-            </a>
-            . Supplies block height, block contents, gas price, base fee,
-            balances, transaction receipts, and contract code. Everything on the
-            blocks page, the gas page, and the search results comes from here.
+            <strong>JSON-RPC</strong> — supplies block height, block contents,
+            gas price, base fee, balances, transaction receipts, and contract
+            code. Everything on the blocks page, the gas page, and the search
+            results comes from here.
           </p>
+          <Endpoint
+            url={RPC_URL}
+            method="POST"
+            note="Not a web page. Opening it in a browser sends an empty body and the node replies with a parse error."
+            className="!my-4"
+          />
           <p>
             <strong>Blockscout</strong> —{" "}
             <a href={BLOCKSCOUT} target="_blank" rel="noopener noreferrer">

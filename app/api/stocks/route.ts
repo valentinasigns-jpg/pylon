@@ -25,11 +25,20 @@ const n = (v: string | null | undefined): number | null => {
   return Number.isFinite(x) ? x : null;
 };
 
+// Eight tokens are fetched at once. A generous per-request deadline
+// multiplied across that fan-out is how this route used to hang past its
+// own limit, so each call gets a tight budget and no retry — a token that
+// misses simply reports itself as unavailable.
+const PER_TOKEN_TIMEOUT_MS = 4500;
+
 async function load() {
   return Promise.all(
     STOCK_TOKENS.map(async (t) => {
       try {
-        const d = await scout<ScoutToken>(`/api/v2/tokens/${t.address}`);
+        const d = await scout<ScoutToken>(`/api/v2/tokens/${t.address}`, {
+          timeoutMs: PER_TOKEN_TIMEOUT_MS,
+          attempts: 1,
+        });
         return {
           symbol: t.symbol,
           address: t.address,

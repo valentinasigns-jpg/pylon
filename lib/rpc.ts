@@ -59,19 +59,31 @@ export async function rpcBatch<T = unknown>(
   );
 }
 
-/** Blockscout REST helper. Server-side only. */
-export async function scout<T = unknown>(path: string): Promise<T> {
+/**
+ * Blockscout REST helper. Server-side only.
+ *
+ * Callers that fan out across many paths should pass a tighter budget:
+ * Blockscout answers in well under a second when healthy, so a long
+ * per-request deadline multiplied across a fan-out is how a route ends up
+ * hanging past its own maxDuration.
+ */
+export async function scout<T = unknown>(
+  path: string,
+  { timeoutMs, attempts }: { timeoutMs?: number; attempts?: number } = {},
+): Promise<T> {
   return retry(
     async () => {
-      const res = await fetchWithTimeout(`${BLOCKSCOUT}${path}`, {
-        headers: { accept: "application/json" },
-      });
+      const res = await fetchWithTimeout(
+        `${BLOCKSCOUT}${path}`,
+        { headers: { accept: "application/json" } },
+        timeoutMs,
+      );
       if (!res.ok) {
         throw new UpstreamError(`http ${res.status}`, "blockscout", res.status);
       }
       return (await res.json()) as T;
     },
-    { label: `blockscout ${path}` },
+    { label: `blockscout ${path}`, attempts },
   );
 }
 

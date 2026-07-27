@@ -1,6 +1,5 @@
 import Link from "next/link";
 import { Hero } from "@/components/hero";
-import { SearchPanel } from "@/components/search-panel";
 import { Endpoint } from "@/components/endpoint";
 import { Reveal } from "@/components/reveal";
 import { SectionHead } from "@/components/primitives";
@@ -11,14 +10,9 @@ export default function Home() {
     <main>
       <Hero />
 
+      {/* Search now lives on the first screen, inside <Hero>. */}
       <div className="mx-auto max-w-[1400px] space-y-14 px-4 py-14 sm:px-6">
-        {/* Search sits here rather than six sections down: looking something
-            up is the most common reason anyone opens an explorer. */}
         <Reveal delay={0}>
-          <SearchPanel />
-        </Reveal>
-
-        <Reveal delay={40}>
           <section id="about" className="scroll-mt-20">
             <SectionHead
               title="What this is"

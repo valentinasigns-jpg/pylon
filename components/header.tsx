@@ -14,26 +14,31 @@ export function Header() {
   return (
     <header className="sticky top-0 z-50 border-b border-[color:var(--color-border)] bg-[color:var(--color-bg)]/92 backdrop-blur">
       <div className="mx-auto flex h-14 max-w-[1400px] items-center justify-between gap-4 px-4 sm:px-6">
-        <Link href="/" className="flex items-center gap-2.5">
-          <PylonMark />
-          <span className="h-display text-[15px] text-[color:var(--color-fg)]">
-            PYLON
-          </span>
-        </Link>
+        {/* Wordmark and nav travel together. Left as two ends of a
+            space-between row, a 1400px header opened a gap between them
+            wider than the menu itself. */}
+        <div className="flex min-w-0 items-center gap-8">
+          <Link href="/" className="flex shrink-0 items-center gap-2.5">
+            <PylonMark />
+            <span className="h-display text-[15px] text-[color:var(--color-fg)]">
+              PYLON
+            </span>
+          </Link>
 
-        <nav className="hidden items-center gap-6 md:flex">
-          {NAV.map((n) => (
-            <Link
-              key={n.href}
-              href={n.href}
-              className="text-[12px] uppercase tracking-[0.1em] text-[color:var(--color-dim)] hover:text-[color:var(--color-fg)]"
-            >
-              {n.label}
-            </Link>
-          ))}
-        </nav>
+          <nav className="hidden items-center gap-6 md:flex">
+            {NAV.map((n) => (
+              <Link
+                key={n.href}
+                href={n.href}
+                className="text-[12px] uppercase tracking-[0.1em] text-[color:var(--color-dim)] hover:text-[color:var(--color-fg)]"
+              >
+                {n.label}
+              </Link>
+            ))}
+          </nav>
+        </div>
 
-        <div className="flex items-center gap-2.5">
+        <div className="flex shrink-0 items-center gap-2.5">
           <span className="hidden sm:block">
             {settled ? (
               <LivePill live={live} reason={reason} />
@@ -45,9 +50,14 @@ export function Header() {
             )}
           </span>
 
-          <span className="hidden border border-[color:var(--color-border)] px-2 py-1 text-[11px] text-[color:var(--color-dim)] lg:inline-block">
-            $PYLON
-          </span>
+          {/* Ticker slot. There is no token yet, and an inert $PYLON chip
+              reads as a broken button rather than as a placeholder. When one
+              exists, it goes back here:
+
+              <span className="hidden border border-[color:var(--color-border)] px-2 py-1 text-[11px] text-[color:var(--color-dim)] lg:inline-block">
+                $PYLON
+              </span>
+          */}
 
           {/* TODO: replace X_HANDLE in lib/config.ts with the real handle */}
           <a

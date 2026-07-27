@@ -19,7 +19,7 @@ export function Metric({
   value: number | null;
   format: (n: number | null) => string;
   className?: string;
-  size?: "sm" | "md" | "lg";
+  size?: "sm" | "md" | "lg" | "xl";
 }) {
   const { value: shown, direction, flash } = useAnimatedNumber(value);
 
@@ -30,10 +30,13 @@ export function Metric({
         : `rgba(255,77,77,${(flash * 0.9).toFixed(3)})`
       : undefined;
 
+  // `xl` borrows the two steps the h1 already uses, so the headline figures
+  // sit on the same scale as the headline rather than introducing a new one.
   const sizes = {
     sm: "text-[15px]",
     md: "text-[22px]",
     lg: "text-[28px]",
+    xl: "text-4xl sm:text-5xl",
   } as const;
 
   return (

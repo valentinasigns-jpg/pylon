@@ -32,7 +32,12 @@ type Result =
 const eth = (wei: number) =>
   wei === 0 ? "0 ETH" : `${(wei / 1e18).toFixed(6)} ETH`;
 
-export function SearchPanel() {
+/**
+ * `bare` drops the section header. On the first screen the search box sits
+ * directly under the headline figures, where a second heading between them
+ * would only push the field below the fold.
+ */
+export function SearchPanel({ bare = false }: { bare?: boolean } = {}) {
   const [q, setQ] = useState("");
   const [res, setRes] = useState<Result | null>(null);
   const [busy, setBusy] = useState(false);
@@ -57,11 +62,13 @@ export function SearchPanel() {
 
   return (
     <section id="search" className="scroll-mt-20">
-      <SectionHead
-        index="05"
-        title="Search"
-        sub="Paste a block number, a transaction hash, or an address. Queries hit the chain directly."
-      />
+      {!bare && (
+        <SectionHead
+          index="05"
+          title="Search"
+          sub="Paste a block number, a transaction hash, or an address. Queries hit the chain directly."
+        />
+      )}
 
       <form onSubmit={submit} className="flex gap-px bg-[color:var(--color-border)]">
         <div className="relative flex-1">

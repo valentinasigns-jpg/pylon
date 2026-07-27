@@ -5,10 +5,14 @@ import { getHeight } from "@/lib/chain-reads";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
-export const maxDuration = 20;
+export const maxDuration = 30;
 
 const COUNT = 15;
 const TTL_MS = 3000;
+// Sized against maxDuration: two attempts at this deadline still land well
+// inside the ceiling, so a single dropped connection degrades to a retry
+// rather than to the platform killing the request.
+const BATCH_TIMEOUT_MS = 6000;
 
 async function load() {
   // Shared with the other routes, so this is usually already in memory.
@@ -19,7 +23,9 @@ async function load() {
     params: [`0x${(height - i).toString(16)}`, false] as unknown[],
   }));
 
-  const raw = await rpcBatch<RawBlock>(calls);
+  const raw = await rpcBatch<RawBlock>(calls, {
+    timeoutMs: BATCH_TIMEOUT_MS,
+  });
 
   return raw.filter(Boolean).map((b) => ({
     number: hexToNum(b.number),

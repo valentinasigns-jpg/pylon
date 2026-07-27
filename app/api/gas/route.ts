@@ -12,6 +12,9 @@ const STRIDE = 4;
 // The heaviest call on the site by far, and the slowest-moving series.
 // A longer TTL keeps it off the critical path for most visitors.
 const TTL_MS = 12000;
+// A hundred blocks is the heaviest read on the site, so it gets more room
+// than the others — but still bounded well inside maxDuration.
+const BATCH_TIMEOUT_MS = 10000;
 
 async function load() {
   const height = await getHeight();
@@ -24,7 +27,9 @@ async function load() {
     ] as unknown[],
   }));
 
-  const raw = await rpcBatch<RawBlock>(calls);
+  const raw = await rpcBatch<RawBlock>(calls, {
+    timeoutMs: BATCH_TIMEOUT_MS,
+  });
 
   return raw
     .filter(Boolean)

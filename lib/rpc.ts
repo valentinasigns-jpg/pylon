@@ -26,9 +26,16 @@ export async function rpc<T = unknown>(
   );
 }
 
-/** Batch JSON-RPC — one round trip for many calls. */
+/**
+ * Batch JSON-RPC — one round trip for many calls.
+ *
+ * Callers should size the deadline against their own maxDuration: the
+ * default budget multiplied by a retry is how a route ends up exceeding
+ * its ceiling and returning nothing at all.
+ */
 export async function rpcBatch<T = unknown>(
   calls: Array<{ method: string; params?: unknown[] }>,
+  { timeoutMs, attempts }: { timeoutMs?: number; attempts?: number } = {},
 ): Promise<T[]> {
   const body = calls.map((c, i) => ({
     jsonrpc: "2.0",
@@ -39,11 +46,15 @@ export async function rpcBatch<T = unknown>(
 
   return retry(
     async () => {
-      const res = await fetchWithTimeout(RPC_URL, {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify(body),
-      });
+      const res = await fetchWithTimeout(
+        RPC_URL,
+        {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify(body),
+        },
+        timeoutMs,
+      );
       if (!res.ok) {
         throw new UpstreamError(`http ${res.status}`, "rpc", res.status);
       }
@@ -55,7 +66,7 @@ export async function rpcBatch<T = unknown>(
         .sort((a, b) => a.id - b.id)
         .map((r) => (r.error ? null : r.result)) as T[];
     },
-    { label: `rpc batch x${calls.length}` },
+    { label: `rpc batch x${calls.length}`, attempts },
   );
 }
 

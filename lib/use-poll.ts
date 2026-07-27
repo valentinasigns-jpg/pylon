@@ -12,6 +12,9 @@ const REQUEST_TIMEOUT_MS = 12000;
  */
 const FAILURES_BEFORE_OFFLINE = 2;
 
+/** Why there is nothing to show. */
+export type FeedReason = "unreachable" | "empty" | null;
+
 export type Feed<T> = {
   data: T | null;
   live: boolean;
@@ -22,6 +25,20 @@ export type Feed<T> = {
   stale: boolean;
   /** epoch ms of the last successful response */
   updatedAt: number | null;
+  /** distinguishes a silent endpoint from an empty answer */
+  reason: FeedReason;
+  /** which upstream served the current payload */
+  source: string | null;
+  /** the primary was down and a secondary answered */
+  fellBack: boolean;
+};
+
+type Envelope = {
+  ok?: boolean;
+  stale?: boolean;
+  reason?: FeedReason;
+  source?: string | null;
+  fellBack?: boolean;
 };
 
 /**
@@ -29,7 +46,7 @@ export type Feed<T> = {
  * `{ ok: boolean, ...payload }`. The last good payload is always kept, so
  * a transient failure never blanks the UI.
  */
-export function usePoll<T extends { ok?: boolean; stale?: boolean }>(
+export function usePoll<T extends Envelope>(
   url: string,
   intervalMs: number = POLL_MS,
 ): Feed<T> {
@@ -38,6 +55,9 @@ export function usePoll<T extends { ok?: boolean; stale?: boolean }>(
   const [settled, setSettled] = useState(false);
   const [stale, setStale] = useState(false);
   const [updatedAt, setUpdatedAt] = useState<number | null>(null);
+  const [reason, setReason] = useState<FeedReason>(null);
+  const [source, setSource] = useState<string | null>(null);
+  const [fellBack, setFellBack] = useState(false);
 
   const alive = useRef(true);
   const failures = useRef(0);
@@ -60,18 +80,29 @@ export function usePoll<T extends { ok?: boolean; stale?: boolean }>(
 
       if (json?.ok === false) {
         failures.current += 1;
-        if (failures.current >= FAILURES_BEFORE_OFFLINE) setLive(false);
+        if (failures.current >= FAILURES_BEFORE_OFFLINE) {
+          setLive(false);
+          setReason(json.reason ?? "unreachable");
+        }
       } else {
         failures.current = 0;
         setData(json);
         setLive(true);
         setStale(Boolean(json?.stale));
+        setReason(json?.reason ?? null);
+        setSource(json?.source ?? null);
+        setFellBack(Boolean(json?.fellBack));
         setUpdatedAt(Date.now());
       }
     } catch {
       if (!alive.current) return;
       failures.current += 1;
-      if (failures.current >= FAILURES_BEFORE_OFFLINE) setLive(false);
+      if (failures.current >= FAILURES_BEFORE_OFFLINE) {
+        setLive(false);
+        // The request itself never completed, so this is the endpoint being
+        // silent rather than the chain having nothing to report.
+        setReason("unreachable");
+      }
     } finally {
       clearTimeout(timer);
       inFlight.current = false;
@@ -102,5 +133,15 @@ export function usePoll<T extends { ok?: boolean; stale?: boolean }>(
     };
   }, [tick, intervalMs]);
 
-  return { data, live, loading: !settled, settled, stale, updatedAt };
+  return {
+    data,
+    live,
+    loading: !settled,
+    settled,
+    stale,
+    updatedAt,
+    reason,
+    source,
+    fellBack,
+  };
 }

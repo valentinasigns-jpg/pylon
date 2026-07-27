@@ -3,7 +3,7 @@
 import { usePoll } from "@/lib/use-poll";
 import { price, usd, compact, truncMid, DASH } from "@/lib/format";
 import { BLOCKSCOUT } from "@/lib/config";
-import { LivePill, SectionHead, Skeleton } from "./primitives";
+import { LivePill, SectionHead, Skeleton, FeedMeta } from "./primitives";
 
 type Stock = {
   symbol: string;
@@ -19,7 +19,8 @@ type Stock = {
 type Feed = { ok: boolean; stocks: Stock[] };
 
 export function StocksGrid() {
-  const { data, live, loading } = usePoll<Feed>("/api/stocks", 15000);
+  const { data, live, loading, updatedAt, reason, source, stale } =
+    usePoll<Feed>("/api/stocks", 15000);
   const stocks = data?.stocks ?? [];
 
   return (
@@ -28,7 +29,7 @@ export function StocksGrid() {
         index="04"
         title="Tokenized equities"
         sub="ERC-20 equity tokens issued on Robinhood Chain. Price, holders and 24h volume are read from the chain explorer, not from an equities feed."
-        right={<LivePill live={live} />}
+        right={<LivePill live={live} reason={reason} />}
       />
 
       <div className="grid grid-cols-1 gap-px border border-[color:var(--color-border)] bg-[color:var(--color-border)] sm:grid-cols-2 lg:grid-cols-4">
@@ -116,10 +117,19 @@ export function StocksGrid() {
           ))}
       </div>
 
-      <p className="mt-3 text-[11px] leading-relaxed text-[color:var(--color-dim)]">
-        Source: Blockscout token API for Robinhood Chain. These figures describe
-        the on-chain token, not the underlying security. A daily price change is
-        not published by the endpoint, so none is shown.
+      <FeedMeta
+        updatedAt={updatedAt}
+        source={source}
+        stale={stale}
+        className="mt-3"
+      />
+
+      <p className="mt-2 text-[11px] leading-relaxed text-[color:var(--color-dim)]">
+        Source: Blockscout token API for Robinhood Chain. Holder counts and
+        prices come from the indexer, so this panel has no second source — a
+        bare node cannot produce them. These figures describe the on-chain
+        token, not the underlying security. A daily price change is not
+        published by the endpoint, so none is shown.
       </p>
     </section>
   );

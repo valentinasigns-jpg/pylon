@@ -3,7 +3,7 @@
 import { usePoll } from "@/lib/use-poll";
 import { num, gwei, compact, DASH } from "@/lib/format";
 import { CHAIN } from "@/lib/config";
-import { LivePill, Skeleton } from "./primitives";
+import { LivePill, Skeleton, FeedMeta } from "./primitives";
 import { ChainForm } from "./chain-form";
 import { Metric, Sparkline } from "./metric";
 
@@ -23,7 +23,8 @@ type ChainFeed = {
 };
 
 export function Hero() {
-  const { data, live, loading } = usePoll<ChainFeed>("/api/chain");
+  const { data, live, loading, updatedAt, reason, source, fellBack, stale } =
+    usePoll<ChainFeed>("/api/chain");
 
   const tiles: Array<{
     label: string;
@@ -73,7 +74,7 @@ export function Hero() {
           {/* left: type */}
           <div>
             <div className="flex flex-wrap items-center gap-3">
-              <LivePill live={live} />
+              <LivePill live={live} reason={reason} />
               <span className="text-[11px] uppercase tracking-[0.14em] text-[color:var(--color-dim)]">
                 {CHAIN.name} · {CHAIN.stack} · chain id {CHAIN.id}
               </span>
@@ -168,6 +169,14 @@ export function Hero() {
                 </div>
               ))}
             </div>
+
+            <FeedMeta
+              updatedAt={updatedAt}
+              source={source}
+              fellBack={fellBack}
+              stale={stale}
+              className="mt-3"
+            />
           </div>
 
           {/* right: the living form — a wireframe surface driven by the

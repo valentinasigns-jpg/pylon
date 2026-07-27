@@ -9,7 +9,7 @@ import { LivePill } from "./primitives";
 
 export function Header() {
   const [open, setOpen] = useState(false);
-  const { live, settled } = usePoll<{ ok: boolean }>("/api/chain");
+  const { live, settled, reason } = usePoll<{ ok: boolean }>("/api/chain");
 
   return (
     <header className="sticky top-0 z-50 border-b border-[color:var(--color-border)] bg-[color:var(--color-bg)]/92 backdrop-blur">
@@ -36,7 +36,7 @@ export function Header() {
         <div className="flex items-center gap-2.5">
           <span className="hidden sm:block">
             {settled ? (
-              <LivePill live={live} />
+              <LivePill live={live} reason={reason} />
             ) : (
               <span className="inline-flex items-center gap-2 border border-[color:var(--color-border)] px-2 py-1 text-[10px] uppercase tracking-[0.14em] text-[color:var(--color-dim)]">
                 <span className="h-1.5 w-1.5 bg-[color:var(--color-dim)]" />

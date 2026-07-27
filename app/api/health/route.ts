@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
-import { RPC_URL, BLOCKSCOUT, CHAIN } from "@/lib/config";
-import { fetchWithTimeout, cacheAges } from "@/lib/upstream";
+import { RPC_URL, RPC_FALLBACK_URL, BLOCKSCOUT, CHAIN } from "@/lib/config";
+import { fetchWithTimeout, cacheAges, openBreakers } from "@/lib/upstream";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -104,16 +104,74 @@ async function probeScout(): Promise<Probe> {
   }
 }
 
+/** The JSON-RPC proxy the chain reads fall back to. */
+async function probeFallback(): Promise<Probe> {
+  const t0 = Date.now();
+  try {
+    const res = await fetchWithTimeout(RPC_FALLBACK_URL, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({
+        jsonrpc: "2.0",
+        id: 1,
+        method: "eth_blockNumber",
+        params: [],
+      }),
+    });
+    const ms = Date.now() - t0;
+    if (!res.ok) {
+      return {
+        id: "rpc-fallback",
+        label: "JSON-RPC fallback",
+        url: RPC_FALLBACK_URL,
+        status: "down",
+        latencyMs: ms,
+        detail: `http ${res.status}`,
+      };
+    }
+    const json = await res.json();
+    const h = json?.result ? Number.parseInt(json.result, 16) : null;
+    return {
+      id: "rpc-fallback",
+      label: "JSON-RPC fallback",
+      url: RPC_FALLBACK_URL,
+      status: h ? "up" : "down",
+      latencyMs: ms,
+      detail: h ? `height ${h.toLocaleString("en-US")}` : "no result",
+    };
+  } catch (err) {
+    return {
+      id: "rpc-fallback",
+      label: "JSON-RPC fallback",
+      url: RPC_FALLBACK_URL,
+      status: "down",
+      latencyMs: Date.now() - t0,
+      detail: (err as Error).message,
+    };
+  }
+}
+
 export async function GET() {
-  const [rpc, blockscout] = await Promise.all([probeRpc(), probeScout()]);
-  const sources = [rpc, blockscout];
-  const ok = sources.every((s) => s.status === "up");
+  const [rpc, blockscout, fallback] = await Promise.all([
+    probeRpc(),
+    probeScout(),
+    probeFallback(),
+  ]);
+  const sources = [rpc, blockscout, fallback];
+
+  // Chain reads survive on either JSON-RPC host, so the dashboard is only
+  // truly down when both are gone.
+  const chainReadable = rpc.status === "up" || fallback.status === "up";
+  const ok = chainReadable && blockscout.status === "up";
 
   return NextResponse.json({
     ok,
+    degraded: chainReadable && rpc.status === "down",
     ts: Date.now(),
     region: process.env.VERCEL_REGION ?? "local",
     sources,
     cacheAgeMs: cacheAges(),
+    // Primaries currently being stepped over after repeated failures.
+    skipping: openBreakers(),
   });
 }

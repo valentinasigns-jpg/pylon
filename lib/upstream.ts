@@ -11,6 +11,105 @@
 
 export const UPSTREAM_TIMEOUT_MS = 9000;
 
+/** Which host actually served a value. */
+export type Source = "rpc" | "blockscout";
+
+/**
+ * Why a panel has nothing to show. These are different situations for the
+ * reader and are worth separating: a silent endpoint is an outage, an empty
+ * answer is simply an absence.
+ */
+export type Reason = "unreachable" | "empty";
+
+/**
+ * Carried through a request so a route can report which host answered and
+ * whether it had to fall back, without changing every call signature.
+ */
+export type Trace = { source?: Source; fellBack?: boolean };
+
+/**
+ * A source that keeps failing is skipped for a while.
+ *
+ * Without this, every request in an outage pays the primary's full timeout
+ * before reaching the fallback — measured at thirteen seconds a call
+ * against a host that was never going to answer. After a couple of
+ * failures the primary is stepped over entirely and requests go straight to
+ * the source that works, until the window lapses and it is tried again.
+ */
+const BREAKER_THRESHOLD = 2;
+// Long enough that a sustained outage is not re-probed on every poll — at
+// twenty seconds the window kept lapsing between requests and each one paid
+// the dead host's timeout again.
+const BREAKER_COOLDOWN_MS = 60000;
+
+const breaker = new Map<string, { failures: number; openedAt: number }>();
+
+function isOpen(key: string): boolean {
+  const b = breaker.get(key);
+  if (!b) return false;
+  if (b.failures < BREAKER_THRESHOLD) return false;
+  if (Date.now() - b.openedAt > BREAKER_COOLDOWN_MS) {
+    // Cooldown lapsed — let one request through to see if it recovered.
+    breaker.delete(key);
+    return false;
+  }
+  return true;
+}
+
+function noteFailure(key: string) {
+  const b = breaker.get(key) ?? { failures: 0, openedAt: 0 };
+  b.failures += 1;
+  if (b.failures >= BREAKER_THRESHOLD) b.openedAt = Date.now();
+  breaker.set(key, b);
+}
+
+function noteSuccess(key: string) {
+  breaker.delete(key);
+}
+
+/** Which primaries are currently being stepped over, for /api/health. */
+export function openBreakers(): string[] {
+  return [...breaker.keys()].filter(isOpen);
+}
+
+/**
+ * Try the primary, and on failure the secondary. Records the winner in the
+ * trace. Only throws if both are down.
+ */
+export async function withFallback<T>(
+  primary: { source: Source; run: () => Promise<T> },
+  secondary: { source: Source; run: () => Promise<T> },
+  trace?: Trace,
+  label = "upstream",
+): Promise<T> {
+  const key = `${label}:${primary.source}`;
+
+  if (!isOpen(key)) {
+    try {
+      const v = await primary.run();
+      noteSuccess(key);
+      if (trace) {
+        trace.source = primary.source;
+        trace.fellBack = false;
+      }
+      return v;
+    } catch (err) {
+      noteFailure(key);
+      console.error(
+        `[pylon] ${label}: ${primary.source} failed, trying ${secondary.source}:`,
+        (err as Error)?.message,
+      );
+    }
+  }
+
+  const v = await secondary.run();
+  if (trace) {
+    trace.source = secondary.source;
+    trace.fellBack = true;
+  }
+  return v;
+}
+
 export class UpstreamError extends Error {
   constructor(
     message: string,

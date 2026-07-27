@@ -4,6 +4,13 @@
 export const RPC_URL = "https://rpc.mainnet.chain.robinhood.com";
 export const BLOCKSCOUT = "https://robinhoodchain.blockscout.com";
 
+/**
+ * Blockscout exposes a JSON-RPC proxy, so the same method names can be
+ * served from a second, independently operated host when the node is
+ * unreachable. Verified: eth_blockNumber answers here.
+ */
+export const RPC_FALLBACK_URL = `${BLOCKSCOUT}/api/eth-rpc`;
+
 export const CHAIN = {
   name: "Robinhood Chain",
   id: 4663,

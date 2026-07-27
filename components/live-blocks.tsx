@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { usePoll } from "@/lib/use-poll";
 import { num, gwei, age, truncMid, DASH } from "@/lib/format";
 import { BLOCKSCOUT } from "@/lib/config";
-import { LivePill, SectionHead, Skeleton } from "./primitives";
+import { LivePill, SectionHead, Skeleton, FeedMeta } from "./primitives";
 
 type Block = {
   number: number;
@@ -22,7 +22,8 @@ type Feed = { ok: boolean; blocks: Block[] };
 const FRESH_MS = 800;
 
 export function LiveBlocks({ limit = 15 }: { limit?: number }) {
-  const { data, live, loading } = usePoll<Feed>("/api/blocks");
+  const { data, live, loading, updatedAt, reason, source, fellBack, stale } =
+    usePoll<Feed>("/api/blocks");
   const [now, setNow] = useState(() => Date.now());
   const [freshUntil, setFreshUntil] = useState<Map<number, number>>(new Map());
   const [ping, setPing] = useState(0);
@@ -86,7 +87,7 @@ export function LiveBlocks({ limit = 15 }: { limit?: number }) {
                 className={`absolute inset-0 ${ping > 0 ? "arrive-ping" : ""}`}
               />
             </span>
-            <LivePill live={live} />
+            <LivePill live={live} reason={reason} />
           </span>
         }
       />
@@ -235,6 +236,14 @@ export function LiveBlocks({ limit = 15 }: { limit?: number }) {
           );
         })}
       </div>
+
+      <FeedMeta
+        updatedAt={updatedAt}
+        source={source}
+        fellBack={fellBack}
+        stale={stale}
+        className="mt-3"
+      />
     </section>
   );
 }

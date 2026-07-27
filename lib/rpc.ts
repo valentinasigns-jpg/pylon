@@ -1,41 +1,78 @@
-import { RPC_URL, BLOCKSCOUT } from "./config";
-import { fetchWithTimeout, retry, UpstreamError } from "./upstream";
+import { RPC_URL, RPC_FALLBACK_URL, BLOCKSCOUT } from "./config";
+import {
+  fetchWithTimeout,
+  retry,
+  withFallback,
+  UpstreamError,
+  type Trace,
+} from "./upstream";
 
-/** Minimal JSON-RPC client. Server-side only. */
-export async function rpc<T = unknown>(
+/** One JSON-RPC round trip against a specific host. */
+async function rpcAt<T>(
+  host: string,
   method: string,
-  params: unknown[] = [],
+  params: unknown[],
+  timeoutMs: number | undefined,
+  attempts: number | undefined,
+  label: string,
 ): Promise<T> {
   return retry(
     async () => {
-      const res = await fetchWithTimeout(RPC_URL, {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({ jsonrpc: "2.0", id: 1, method, params }),
-      });
+      const res = await fetchWithTimeout(
+        host,
+        {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ jsonrpc: "2.0", id: 1, method, params }),
+        },
+        timeoutMs,
+      );
       if (!res.ok) {
-        throw new UpstreamError(`http ${res.status}`, "rpc", res.status);
+        throw new UpstreamError(`http ${res.status}`, host, res.status);
       }
       const json = await res.json();
-      if (json.error) {
-        throw new UpstreamError(json.error.message, "rpc");
-      }
+      if (json.error) throw new UpstreamError(json.error.message, host);
       return json.result as T;
     },
-    { label: `rpc ${method}` },
+    { label, attempts },
   );
 }
 
 /**
- * Batch JSON-RPC — one round trip for many calls.
+ * JSON-RPC with a second host behind it. Server-side only.
  *
- * Callers should size the deadline against their own maxDuration: the
- * default budget multiplied by a retry is how a route ends up exceeding
- * its ceiling and returning nothing at all.
+ * Blockscout proxies the same methods, so a silent node degrades to a
+ * slower answer rather than to an empty panel.
  */
-export async function rpcBatch<T = unknown>(
+export async function rpc<T = unknown>(
+  method: string,
+  params: unknown[] = [],
+  opts: { timeoutMs?: number; attempts?: number; trace?: Trace } = {},
+): Promise<T> {
+  const { timeoutMs, attempts, trace } = opts;
+  return withFallback<T>(
+    {
+      source: "rpc",
+      run: () => rpcAt<T>(RPC_URL, method, params, timeoutMs, attempts, `rpc ${method}`),
+    },
+    {
+      source: "blockscout",
+      // The fallback gets one attempt: it is already the second thing tried
+      // and the caller is waiting.
+      run: () =>
+        rpcAt<T>(RPC_FALLBACK_URL, method, params, timeoutMs, 1, `rpc:bs ${method}`),
+    },
+    trace,
+    `rpc ${method}`,
+  );
+}
+
+async function rpcBatchAt<T>(
+  host: string,
   calls: Array<{ method: string; params?: unknown[] }>,
-  { timeoutMs, attempts }: { timeoutMs?: number; attempts?: number } = {},
+  timeoutMs: number | undefined,
+  attempts: number | undefined,
+  label: string,
 ): Promise<T[]> {
   const body = calls.map((c, i) => ({
     jsonrpc: "2.0",
@@ -47,7 +84,7 @@ export async function rpcBatch<T = unknown>(
   return retry(
     async () => {
       const res = await fetchWithTimeout(
-        RPC_URL,
+        host,
         {
           method: "POST",
           headers: { "content-type": "application/json" },
@@ -56,27 +93,74 @@ export async function rpcBatch<T = unknown>(
         timeoutMs,
       );
       if (!res.ok) {
-        throw new UpstreamError(`http ${res.status}`, "rpc", res.status);
+        throw new UpstreamError(`http ${res.status}`, host, res.status);
       }
       const json = await res.json();
       if (!Array.isArray(json)) {
-        throw new UpstreamError("batch response was not an array", "rpc");
+        throw new UpstreamError("batch response was not an array", host);
       }
       return json
         .sort((a, b) => a.id - b.id)
         .map((r) => (r.error ? null : r.result)) as T[];
     },
-    { label: `rpc batch x${calls.length}`, attempts },
+    { label, attempts },
   );
+}
+
+/**
+ * Batch JSON-RPC.
+ *
+ * There is deliberately no fallback here. The indexer's RPC proxy caps the
+ * request body at four calls (probed: 1-4 return 200, 6+ return 413) and
+ * rate-limits beyond a couple of requests, so replaying a fifteen- or
+ * sixty-call batch against it produces 429s and takes half a minute.
+ * Feeds that need many blocks fall back through the indexer's REST list
+ * instead, which answers the same question in a single request — see
+ * `scoutBlocks`.
+ *
+ * Size the deadline against the route's own maxDuration: a generous budget
+ * multiplied by a retry is how a route exceeds its ceiling and returns
+ * nothing at all.
+ */
+export async function rpcBatch<T = unknown>(
+  calls: Array<{ method: string; params?: unknown[] }>,
+  opts: { timeoutMs?: number; attempts?: number; trace?: Trace } = {},
+): Promise<T[]> {
+  const { timeoutMs, attempts, trace } = opts;
+  const label = `rpc batch x${calls.length}`;
+
+  // Small batches are within what the proxy accepts, so the chain head
+  // keeps its second source.
+  if (calls.length <= 4) {
+    return withFallback<T[]>(
+      {
+        source: "rpc",
+        run: () => rpcBatchAt<T>(RPC_URL, calls, timeoutMs, attempts, label),
+      },
+      {
+        source: "blockscout",
+        run: () =>
+          rpcBatchAt<T>(RPC_FALLBACK_URL, calls, timeoutMs, 1, `${label}:bs`),
+      },
+      trace,
+      label,
+    );
+  }
+
+  const v = await rpcBatchAt<T>(RPC_URL, calls, timeoutMs, attempts, label);
+  if (trace) {
+    trace.source = "rpc";
+    trace.fellBack = false;
+  }
+  return v;
 }
 
 /**
  * Blockscout REST helper. Server-side only.
  *
- * Callers that fan out across many paths should pass a tighter budget:
- * Blockscout answers in well under a second when healthy, so a long
- * per-request deadline multiplied across a fan-out is how a route ends up
- * hanging past its own maxDuration.
+ * There is no fallback here by design: holder counts, token prices and
+ * metadata come from the indexer, and a bare node cannot produce them.
+ * Callers that fan out across many paths should pass a tighter budget.
  */
 export async function scout<T = unknown>(
   path: string,

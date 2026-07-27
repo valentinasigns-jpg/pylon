@@ -1,24 +1,31 @@
 import { NextResponse } from "next/server";
 import { rpcBatch, hexToNum, type RawBlock } from "@/lib/rpc";
-import { memo } from "@/lib/upstream";
-import { getHeight } from "@/lib/chain-reads";
+import { memo, withFallback, type Trace } from "@/lib/upstream";
+import { getHeight, scoutBlocks } from "@/lib/chain-reads";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 export const maxDuration = 30;
 
-const SAMPLES = 100;
-const STRIDE = 4;
+const SAMPLES = 60;
+const STRIDE = 6;
 // The heaviest call on the site by far, and the slowest-moving series.
 // A longer TTL keeps it off the critical path for most visitors.
 const TTL_MS = 12000;
-// A hundred blocks is the heaviest read on the site, so it gets more room
-// than the others — but still bounded well inside maxDuration.
-const BATCH_TIMEOUT_MS = 10000;
+// The indexer is standing by, so the node gets one short attempt rather
+// than a long deadline and a retry — the fallback is the retry.
+const PRIMARY_BUDGET_MS = 6000;
 
-async function load() {
-  const height = await getHeight();
+type Point = {
+  block: number;
+  baseFeeWei: number | null;
+  gasUsed: number;
+  txCount: number;
+};
 
+/** Strided sample straight from the node — the wider, preferred window. */
+async function fromNode(): Promise<{ points: Point[]; stride: number }> {
+  const height = await getHeight(undefined, PRIMARY_BUDGET_MS);
   const calls = Array.from({ length: SAMPLES }, (_, i) => ({
     method: "eth_getBlockByNumber",
     params: [
@@ -28,18 +35,60 @@ async function load() {
   }));
 
   const raw = await rpcBatch<RawBlock>(calls, {
-    timeoutMs: BATCH_TIMEOUT_MS,
+    timeoutMs: PRIMARY_BUDGET_MS,
+    attempts: 1,
   });
 
-  return raw
-    .filter(Boolean)
-    .map((b) => ({
-      block: hexToNum(b.number),
-      baseFeeWei: b.baseFeePerGas ? hexToNum(b.baseFeePerGas) : null,
-      gasUsed: hexToNum(b.gasUsed),
-      txCount: b.transactions?.length ?? 0,
-    }))
-    .filter((p) => p.baseFeeWei !== null);
+  return {
+    stride: STRIDE,
+    points: raw
+      .filter(Boolean)
+      .map((b) => ({
+        block: hexToNum(b.number),
+        baseFeeWei: b.baseFeePerGas ? hexToNum(b.baseFeePerGas) : null,
+        gasUsed: hexToNum(b.gasUsed),
+        txCount: b.transactions?.length ?? 0,
+      })),
+  };
+}
+
+/**
+ * The indexer cannot be asked for a strided sample, only for the most
+ * recent run of blocks. So the fallback covers a narrower window at full
+ * resolution rather than a wide one with gaps. The real stride is returned
+ * either way, so the caption never claims a window it did not read.
+ */
+async function fromIndexer(): Promise<{ points: Point[]; stride: number }> {
+  const rows = await scoutBlocks(SAMPLES);
+  return {
+    stride: 1,
+    points: rows
+      .slice()
+      .reverse()
+      .map((b) => ({
+        block: b.number,
+        baseFeeWei: b.baseFeeWei,
+        gasUsed: b.gasUsed,
+        txCount: b.txCount,
+      })),
+  };
+}
+
+async function load() {
+  const trace: Trace = {};
+  const got = await withFallback(
+    { source: "rpc", run: fromNode },
+    { source: "blockscout", run: fromIndexer },
+    trace,
+    "gas",
+  );
+
+  return {
+    source: trace.source ?? null,
+    fellBack: trace.fellBack ?? false,
+    stride: got.stride,
+    points: got.points.filter((p) => p.baseFeeWei !== null),
+  };
 }
 
 export async function GET() {
@@ -48,14 +97,23 @@ export async function GET() {
     return NextResponse.json({
       ok: true,
       stale,
+      reason: value.points.length === 0 ? "empty" : null,
       ts: Date.now(),
-      stride: STRIDE,
-      points: value,
+      stride: value.stride,
+      source: value.source,
+      fellBack: value.fellBack,
+      points: value.points,
     });
   } catch (err) {
     console.error("[pylon] /api/gas:", (err as Error).message);
     return NextResponse.json(
-      { ok: false, error: (err as Error).message, ts: Date.now(), points: [] },
+      {
+        ok: false,
+        reason: "unreachable",
+        error: (err as Error).message,
+        ts: Date.now(),
+        points: [],
+      },
       { status: 200 },
     );
   }

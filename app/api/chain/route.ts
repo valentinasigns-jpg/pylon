@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { rpcBatch, hexToNum, type RawBlock } from "@/lib/rpc";
-import { memo } from "@/lib/upstream";
+import { memo, type Trace } from "@/lib/upstream";
 import { getTotals } from "@/lib/chain-reads";
 
 export const runtime = "nodejs";
@@ -15,15 +15,21 @@ const TTL_MS = 3000;
  * and then the block at that height.
  */
 async function load() {
-  const [block, gasHex] = await rpcBatch<RawBlock & string>([
-    { method: "eth_getBlockByNumber", params: ["latest", false] },
-    { method: "eth_gasPrice" },
-  ]);
+  const trace: Trace = {};
+  const [block, gasHex] = await rpcBatch<RawBlock & string>(
+    [
+      { method: "eth_getBlockByNumber", params: ["latest", false] },
+      { method: "eth_gasPrice" },
+    ],
+    { trace },
+  );
 
   const b = block as unknown as RawBlock | null;
   if (!b?.number) throw new Error("no latest block");
 
   return {
+    source: trace.source ?? null,
+    fellBack: trace.fellBack ?? false,
     height: hexToNum(b.number),
     gasPriceWei: gasHex ? hexToNum(gasHex as unknown as string) : null,
     baseFeeWei: b.baseFeePerGas ? hexToNum(b.baseFeePerGas) : null,
@@ -45,6 +51,7 @@ export async function GET() {
     return NextResponse.json({
       ok: true,
       stale: core.stale,
+      reason: null,
       ts: Date.now(),
       ...core.value,
       totals,
@@ -52,7 +59,14 @@ export async function GET() {
   } catch (err) {
     console.error("[pylon] /api/chain:", (err as Error).message);
     return NextResponse.json(
-      { ok: false, error: (err as Error).message, ts: Date.now() },
+      {
+        ok: false,
+        // Both hosts were tried before we got here, so this is an outage
+        // rather than an absence of data.
+        reason: "unreachable",
+        error: (err as Error).message,
+        ts: Date.now(),
+      },
       { status: 200 },
     );
   }

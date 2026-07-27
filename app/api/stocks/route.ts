@@ -71,16 +71,30 @@ export async function GET() {
   try {
     const { value, stale } = await memo("stocks", TTL_MS, load);
     const anyOk = value.some((r) => r.ok && r.price !== null);
+    const anyReached = value.some((r) => r.ok);
     return NextResponse.json({
       ok: anyOk,
       stale,
+      // Reached the indexer but it had no price for anything: an absence,
+      // not an outage. Nothing reached at all: an outage.
+      reason: anyOk ? null : anyReached ? "empty" : "unreachable",
       ts: Date.now(),
+      // Token metadata is indexer-only — a bare node cannot produce holder
+      // counts or prices, so this route has no second source by design.
+      source: "blockscout" as const,
+      fellBack: false,
       stocks: value,
     });
   } catch (err) {
     console.error("[pylon] /api/stocks:", (err as Error).message);
     return NextResponse.json(
-      { ok: false, error: (err as Error).message, ts: Date.now(), stocks: [] },
+      {
+        ok: false,
+        reason: "unreachable",
+        error: (err as Error).message,
+        ts: Date.now(),
+        stocks: [],
+      },
       { status: 200 },
     );
   }

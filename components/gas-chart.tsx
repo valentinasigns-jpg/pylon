@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { usePoll } from "@/lib/use-poll";
 import { gwei, num, DASH } from "@/lib/format";
-import { LivePill, SectionHead, Skeleton } from "./primitives";
+import { LivePill, SectionHead, Skeleton, FeedMeta } from "./primitives";
 
 type Point = {
   block: number;
@@ -18,7 +18,8 @@ const H = 240;
 const PAD = { t: 14, r: 10, b: 24, l: 10 };
 
 export function GasChart() {
-  const { data, live, loading } = usePoll<Feed>("/api/gas", 10000);
+  const { data, live, loading, updatedAt, reason, source, fellBack, stale } =
+    usePoll<Feed>("/api/gas", 10000);
   const target = useMemo(() => data?.points ?? [], [data]);
 
   // Values the line is currently drawn at. They ease toward `target`, so an
@@ -162,7 +163,7 @@ export function GasChart() {
                 reset zoom
               </button>
             )}
-            <LivePill live={live} />
+            <LivePill live={live} reason={reason} />
           </span>
         }
       />
@@ -344,6 +345,14 @@ export function GasChart() {
           </span>
         </div>
       </div>
+
+      <FeedMeta
+        updatedAt={updatedAt}
+        source={source}
+        fellBack={fellBack}
+        stale={stale}
+        className="mt-3"
+      />
     </section>
   );
 }

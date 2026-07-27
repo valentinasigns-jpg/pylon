@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
-import { rpc, rpcBatch, hexToNum, type RawBlock } from "@/lib/rpc";
+import { rpcBatch, hexToNum, type RawBlock } from "@/lib/rpc";
 import { memo } from "@/lib/upstream";
+import { getHeight } from "@/lib/chain-reads";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -10,8 +11,8 @@ const COUNT = 15;
 const TTL_MS = 3000;
 
 async function load() {
-  const heightHex = await rpc<string>("eth_blockNumber");
-  const height = hexToNum(heightHex);
+  // Shared with the other routes, so this is usually already in memory.
+  const height = await getHeight();
 
   const calls = Array.from({ length: COUNT }, (_, i) => ({
     method: "eth_getBlockByNumber",

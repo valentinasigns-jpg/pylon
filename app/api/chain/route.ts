@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
-import { rpcBatch, scout, hexToNum, type RawBlock } from "@/lib/rpc";
+import { rpcBatch, hexToNum, type RawBlock } from "@/lib/rpc";
 import { memo } from "@/lib/upstream";
+import { getTotals } from "@/lib/chain-reads";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -8,65 +9,46 @@ export const maxDuration = 20;
 
 const TTL_MS = 3000;
 
-type ScoutStats = {
-  total_blocks?: string;
-  total_transactions?: string;
-  total_addresses?: string;
-  transactions_today?: string;
-  average_block_time?: number;
-};
-
+/**
+ * One round trip. Asking for the "latest" tag returns the block number
+ * alongside everything else, so there is no need to fetch the height first
+ * and then the block at that height.
+ */
 async function load() {
-  const [heightHex, gasHex] = await rpcBatch<string>([
-    { method: "eth_blockNumber" },
+  const [block, gasHex] = await rpcBatch<RawBlock & string>([
+    { method: "eth_getBlockByNumber", params: ["latest", false] },
     { method: "eth_gasPrice" },
   ]);
-  if (!heightHex) throw new Error("no block height");
 
-  const [block] = await rpcBatch<RawBlock>([
-    { method: "eth_getBlockByNumber", params: [heightHex, false] },
-  ]);
-
-  // Aggregates are a bonus — never fail the whole response for them.
-  let stats: ScoutStats | null = null;
-  try {
-    stats = await scout<ScoutStats>("/api/v2/stats");
-  } catch {
-    stats = null;
-  }
+  const b = block as unknown as RawBlock | null;
+  if (!b?.number) throw new Error("no latest block");
 
   return {
-    height: hexToNum(heightHex),
-    gasPriceWei: gasHex ? hexToNum(gasHex) : null,
-    baseFeeWei: block?.baseFeePerGas ? hexToNum(block.baseFeePerGas) : null,
-    txInLatest: block?.transactions ? block.transactions.length : null,
-    blockTimestamp: block?.timestamp ? hexToNum(block.timestamp) : null,
-    gasUsedLatest: block?.gasUsed ? hexToNum(block.gasUsed) : null,
-    totals: stats
-      ? {
-          blocks: stats.total_blocks ? Number(stats.total_blocks) : null,
-          transactions: stats.total_transactions
-            ? Number(stats.total_transactions)
-            : null,
-          addresses: stats.total_addresses
-            ? Number(stats.total_addresses)
-            : null,
-          txToday: stats.transactions_today
-            ? Number(stats.transactions_today)
-            : null,
-          avgBlockTimeMs:
-            typeof stats.average_block_time === "number"
-              ? stats.average_block_time
-              : null,
-        }
-      : null,
+    height: hexToNum(b.number),
+    gasPriceWei: gasHex ? hexToNum(gasHex as unknown as string) : null,
+    baseFeeWei: b.baseFeePerGas ? hexToNum(b.baseFeePerGas) : null,
+    txInLatest: b.transactions ? b.transactions.length : null,
+    blockTimestamp: b.timestamp ? hexToNum(b.timestamp) : null,
+    gasUsedLatest: b.gasUsed ? hexToNum(b.gasUsed) : null,
   };
 }
 
 export async function GET() {
   try {
-    const { value, stale } = await memo("chain", TTL_MS, load);
-    return NextResponse.json({ ok: true, stale, ts: Date.now(), ...value });
+    // Aggregates run on their own 30s cache and resolve to null on failure,
+    // so they can never slow down or break the core reading.
+    const [core, totals] = await Promise.all([
+      memo("chain", TTL_MS, load),
+      getTotals(),
+    ]);
+
+    return NextResponse.json({
+      ok: true,
+      stale: core.stale,
+      ts: Date.now(),
+      ...core.value,
+      totals,
+    });
   } catch (err) {
     console.error("[pylon] /api/chain:", (err as Error).message);
     return NextResponse.json(

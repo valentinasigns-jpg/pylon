@@ -1,0 +1,157 @@
+@import "tailwindcss";
+
+@theme {
+  --color-bg: #0a0a0a;
+  --color-surface: #121212;
+  --color-border: #1f1f1f;
+  --color-fg: #ededed;
+  --color-dim: #7a7a7a;
+  --color-accent: #00ff9c;
+  --color-warn: #ff4d4d;
+
+  --font-mono: var(--font-jetbrains), ui-monospace, "SFMono-Regular", monospace;
+
+  --spacing: 8px;
+}
+
+:root {
+  color-scheme: dark;
+}
+
+html {
+  background: #0a0a0a;
+}
+
+body {
+  background: #0a0a0a;
+  color: #ededed;
+  font-family: var(--font-jetbrains), ui-monospace, monospace;
+  font-variant-numeric: tabular-nums;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overflow-x: hidden;
+}
+
+*,
+*::before,
+*::after {
+  font-variant-numeric: tabular-nums;
+}
+
+::selection {
+  background: #00ff9c;
+  color: #0a0a0a;
+}
+
+/* ---- headings: 600, uppercase, tight tracking ---- */
+.h-display {
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: -0.02em;
+}
+
+/* ---- hero grid texture, very low opacity ---- */
+.hero-grid {
+  background-image:
+    linear-gradient(to right, rgba(255, 255, 255, 0.022) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.022) 1px, transparent 1px);
+  background-size: 32px 32px;
+}
+
+.hero-scan {
+  background-image: repeating-linear-gradient(
+    to bottom,
+    transparent 0,
+    transparent 2px,
+    rgba(255, 255, 255, 0.012) 2px,
+    rgba(255, 255, 255, 0.012) 3px
+  );
+}
+
+/* ---- live pulse dot ---- */
+@keyframes pulse-dot {
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.35;
+    transform: scale(0.82);
+  }
+}
+.pulse-dot {
+  animation: pulse-dot 1.6s ease-in-out infinite;
+}
+
+/* ---- new block slides in from top ---- */
+@keyframes slide-in {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.slide-in {
+  animation: slide-in 120ms ease-out;
+}
+
+/* ---- skeleton shimmer ---- */
+@keyframes sk {
+  0% {
+    background-position: -180% 0;
+  }
+  100% {
+    background-position: 180% 0;
+  }
+}
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    #141414 0%,
+    #1c1c1c 50%,
+    #141414 100%
+  );
+  background-size: 180% 100%;
+  animation: sk 1.1s linear infinite;
+}
+
+/* ---- fast mechanical transitions everywhere ---- */
+a,
+button {
+  transition:
+    color 120ms ease-out,
+    background-color 120ms ease-out,
+    border-color 120ms ease-out;
+}
+
+/* ---- hairline helper ---- */
+.hairline {
+  border: 0;
+  height: 1px;
+  background: #1f1f1f;
+}
+
+/* ---- focus ring, keyboard only ---- */
+:focus-visible {
+  outline: 1px solid #00ff9c;
+  outline-offset: 1px;
+}
+
+/* thin scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: #0a0a0a;
+}
+::-webkit-scrollbar-thumb {
+  background: #1f1f1f;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #2c2c2c;
+}

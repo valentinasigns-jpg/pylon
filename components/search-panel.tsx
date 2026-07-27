@@ -70,11 +70,12 @@ export function SearchPanel() {
             className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[color:var(--color-dim)]"
           />
           <input
+            id="pylon-search"
             value={q}
             onChange={(e) => setQ(e.target.value)}
             spellCheck={false}
             autoComplete="off"
-            placeholder="20754129   ·   0xabc…  ·  0x1f9…"
+            placeholder="20754129   ·   0xabc…  ·  0x1f9…      press / to focus"
             aria-label="Search block, transaction, or address"
             className="w-full border-0 bg-[color:var(--color-surface)] py-3 pl-9 pr-3 text-[13px] text-[color:var(--color-fg)] placeholder:text-[#4a4a4a] focus:outline-none"
           />

@@ -4,6 +4,9 @@ import "./globals.css";
 import { Header } from "@/components/header";
 import { Footer } from "@/components/footer";
 import { GridField } from "@/components/grid-field";
+import { Heartbeat } from "@/components/heartbeat";
+import { SectionIndex } from "@/components/section-index";
+import { KeyboardShortcuts } from "@/components/keyboard";
 
 const jetbrains = JetBrains_Mono({
   subsets: ["latin"],
@@ -33,14 +36,6 @@ export const metadata: Metadata = {
     description:
       "Live blocks, gas and tokenized equities on Robinhood Chain. Public data, read-only.",
   },
-  icons: {
-    icon: [
-      {
-        url:
-          "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 18 18'><rect width='18' height='18' fill='%230A0A0A'/><path d='M2 16 L9 2 L16 16' fill='none' stroke='%2300FF9C' stroke-width='1.6'/><path d='M5.2 10.5 H12.8' stroke='%2300FF9C' stroke-width='1.6'/></svg>",
-      },
-    ],
-  },
 };
 
 export default function RootLayout({
@@ -52,9 +47,12 @@ export default function RootLayout({
     <html lang="en" className={jetbrains.variable}>
       <body>
         <GridField />
+        <Heartbeat />
         <Header />
         {children}
         <Footer />
+        <SectionIndex />
+        <KeyboardShortcuts />
       </body>
     </html>
   );

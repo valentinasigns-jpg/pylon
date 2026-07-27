@@ -7,6 +7,7 @@ import { SearchPanel } from "@/components/search-panel";
 import { Gauges } from "@/components/gauges";
 import { ChainMonitor } from "@/components/chain-monitor";
 import { Endpoint } from "@/components/endpoint";
+import { Reveal } from "@/components/reveal";
 import { SectionHead } from "@/components/primitives";
 import { CHAIN, RPC_URL, BLOCKSCOUT } from "@/lib/config";
 
@@ -29,10 +30,18 @@ export default function Home() {
           </div>
         </section>
 
-        <LiveBlocks limit={15} />
-        <GasChart />
-        <StocksGrid />
-        <SearchPanel />
+        <Reveal delay={0}>
+          <LiveBlocks limit={15} />
+        </Reveal>
+        <Reveal delay={40}>
+          <GasChart />
+        </Reveal>
+        <Reveal delay={80}>
+          <StocksGrid />
+        </Reveal>
+        <Reveal delay={120}>
+          <SearchPanel />
+        </Reveal>
 
         {/* about */}
         <section id="about" className="scroll-mt-20">

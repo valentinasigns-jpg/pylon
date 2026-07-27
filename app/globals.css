@@ -50,12 +50,39 @@ body {
   letter-spacing: -0.02em;
 }
 
-/* ---- hero grid texture, very low opacity ---- */
+/* ---- hero grid texture ---- */
 .hero-grid {
   background-image:
-    linear-gradient(to right, rgba(255, 255, 255, 0.022) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(255, 255, 255, 0.022) 1px, transparent 1px);
+    linear-gradient(to right, rgba(255, 255, 255, 0.035) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.035) 1px, transparent 1px);
   background-size: 32px 32px;
+  mask-image: radial-gradient(ellipse 120% 90% at 50% 30%, #000 30%, transparent 100%);
+}
+
+/* coarse grid layered over the fine one */
+.hero-grid::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(to right, rgba(0, 255, 156, 0.05) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(0, 255, 156, 0.05) 1px, transparent 1px);
+  background-size: 128px 128px;
+}
+
+/* ---- accent glow bloom ---- */
+.hero-glow {
+  background:
+    radial-gradient(
+      ellipse 60% 50% at 78% 18%,
+      rgba(0, 255, 156, 0.10) 0%,
+      transparent 70%
+    ),
+    radial-gradient(
+      ellipse 50% 40% at 8% 92%,
+      rgba(0, 255, 156, 0.05) 0%,
+      transparent 70%
+    );
 }
 
 .hero-scan {
@@ -63,9 +90,40 @@ body {
     to bottom,
     transparent 0,
     transparent 2px,
-    rgba(255, 255, 255, 0.012) 2px,
-    rgba(255, 255, 255, 0.012) 3px
+    rgba(255, 255, 255, 0.014) 2px,
+    rgba(255, 255, 255, 0.014) 3px
   );
+}
+
+/* ---- slow scanline sweep across the hero ---- */
+@keyframes sweep {
+  0% {
+    transform: translateY(-30%);
+    opacity: 0;
+  }
+  12% {
+    opacity: 1;
+  }
+  88% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(130%);
+    opacity: 0;
+  }
+}
+.sweep::before {
+  content: "";
+  position: absolute;
+  inset-inline: 0;
+  height: 30%;
+  background: linear-gradient(
+    to bottom,
+    transparent 0%,
+    rgba(0, 255, 156, 0.028) 50%,
+    transparent 100%
+  );
+  animation: sweep 9s linear infinite;
 }
 
 /* ---- live pulse dot ---- */
@@ -133,6 +191,22 @@ button {
   border: 0;
   height: 1px;
   background: #1f1f1f;
+}
+
+/* ---- page-wide faint grid so no area reads as bare ---- */
+.page-bg {
+  position: relative;
+}
+.page-bg::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background-image:
+    linear-gradient(to right, rgba(255, 255, 255, 0.018) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.018) 1px, transparent 1px);
+  background-size: 64px 64px;
 }
 
 /* ---- focus ring, keyboard only ---- */

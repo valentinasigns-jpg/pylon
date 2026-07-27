@@ -4,15 +4,26 @@ import { LiveBlocks } from "@/components/live-blocks";
 import { GasChart } from "@/components/gas-chart";
 import { StocksGrid } from "@/components/stocks-grid";
 import { SearchPanel } from "@/components/search-panel";
+import { Gauges } from "@/components/gauges";
 import { SectionHead } from "@/components/primitives";
 import { CHAIN, RPC_URL, BLOCKSCOUT } from "@/lib/config";
 
 export default function Home() {
   return (
-    <main>
+    <main className="page-bg">
       <Hero />
 
       <div className="mx-auto max-w-[1400px] space-y-14 px-4 py-14 sm:px-6">
+        {/* network gauges */}
+        <section id="network" className="scroll-mt-20">
+          <SectionHead
+            index="01"
+            title="Network"
+            sub="Instantaneous readings from the head of the chain. Every gauge states the range it is scaled against — none of them are normalised to look busy."
+          />
+          <Gauges />
+        </section>
+
         <LiveBlocks limit={15} />
         <GasChart />
         <StocksGrid />

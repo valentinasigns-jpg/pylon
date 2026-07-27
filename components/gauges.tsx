@@ -68,7 +68,7 @@ function Arc({
   const fill = `M ${x0.toFixed(2)} ${y0.toFixed(2)} A ${R} ${R} 0 ${largeArc} 1 ${xv.toFixed(2)} ${yv.toFixed(2)}`;
 
   return (
-    <div className="flex flex-col items-center px-3 py-4">
+    <div className="flex flex-col items-center bg-[color:var(--color-surface)] px-3 py-4">
       <svg viewBox="0 0 120 100" className="h-[92px] w-[112px]" aria-hidden>
         <path
           d={track}
@@ -142,12 +142,16 @@ function Meter({
 }) {
   const f = frac == null ? 0 : Math.max(0.02, Math.min(1, frac));
   return (
-    <div className="px-4 py-4">
-      <div className="flex items-baseline justify-between">
-        <span className="text-[10px] uppercase tracking-[0.14em] text-[color:var(--color-dim)]">
-          {label}
-        </span>
-        <span className="text-[15px] text-[color:var(--color-fg)]">{value}</span>
+    // Label sits above the value rather than beside it: these labels run to
+    // three words and the values are large, so sharing a baseline row in a
+    // column this narrow put them on top of each other. The reserved
+    // heights keep all four cells aligned whatever the text length.
+    <div className="flex h-full flex-col bg-[color:var(--color-surface)] px-4 py-4">
+      <div className="min-h-[2.5em] text-[10px] uppercase leading-[1.25] tracking-[0.14em] text-[color:var(--color-dim)]">
+        {label}
+      </div>
+      <div className="mt-2 text-[20px] leading-none tabular-nums text-[color:var(--color-fg)]">
+        {value}
       </div>
       {/* segmented bar */}
       <div className="mt-3 flex h-2.5 gap-[2px]">
@@ -165,7 +169,9 @@ function Meter({
           );
         })}
       </div>
-      <div className="mt-2 text-[10px] text-[color:var(--color-dim)]">{sub}</div>
+      <div className="mt-2 min-h-[2.4em] text-[10px] leading-[1.35] text-[color:var(--color-dim)]">
+        {sub}
+      </div>
     </div>
   );
 }
@@ -187,9 +193,12 @@ export function Gauges() {
   const txFrac = txLatest != null ? Math.min(1, txLatest / 40) : null; // 0 → 40 tx
 
   return (
-    <div className="grid grid-cols-1 gap-px border border-[color:var(--color-border)] bg-[color:var(--color-border)] lg:grid-cols-[auto_1fr]">
-      {/* three arcs */}
-      <div className="flex justify-between bg-[color:var(--color-surface)] sm:justify-around lg:justify-start">
+    // Two full-width bands rather than an auto/1fr split. The arcs are short
+    // and the meters are tall, so side by side left a large void under the
+    // dials and stretched the meters apart.
+    <div className="border border-[color:var(--color-border)] bg-[color:var(--color-border)]">
+      {/* band one — dials */}
+      <div className="grid grid-cols-3 gap-px">
         <Arc
           frac={feeFrac}
           label="base fee"
@@ -210,8 +219,8 @@ export function Gauges() {
         />
       </div>
 
-      {/* meters */}
-      <div className="grid grid-cols-1 divide-y divide-[color:var(--color-border)] bg-[color:var(--color-surface)] sm:grid-cols-2 sm:divide-x sm:divide-y-0">
+      {/* band two — meters */}
+      <div className="mt-px grid grid-cols-1 gap-px sm:grid-cols-2 xl:grid-cols-4">
         <Meter
           label="gas used, latest block"
           value={gasUsed != null ? compact(gasUsed) : DASH}

@@ -12,27 +12,75 @@ const SECTIONS = [
 ];
 
 /**
- * Fixed index down the left margin. Highlights whichever section owns the
- * upper third of the viewport. Hidden below 2xl, where the margin the site
- * runs at is not wide enough to hold it clear of the content.
+ * Fixed index down the left margin, marking the section the reader is in.
+ *
+ * The section is chosen by span rather than by "the last one whose top has
+ * passed a line": a section counts as current while the reading line falls
+ * between its top and bottom. Picking by top alone lagged by one entry
+ * whenever a tall section sat above a short one.
+ *
+ * Hidden below 2xl, where the page margin is not wide enough to hold it
+ * clear of the content.
  */
 export function SectionIndex() {
   const [active, setActive] = useState<string>("network");
 
   useEffect(() => {
-    const onScroll = () => {
-      const line = window.innerHeight * 0.33;
+    const measure = () => {
+      const line = window.innerHeight * 0.3;
       let current = SECTIONS[0].id;
+      let matched = false;
+
       for (const s of SECTIONS) {
         const el = document.getElementById(s.id);
         if (!el) continue;
-        if (el.getBoundingClientRect().top <= line) current = s.id;
+        const r = el.getBoundingClientRect();
+        if (r.top <= line && r.bottom > line) {
+          current = s.id;
+          matched = true;
+          break;
+        }
+        // Fallback for the gaps between sections: remember the last one
+        // whose top the line has already crossed.
+        if (r.top <= line) current = s.id;
       }
+
+      // Past the last section, pin to it rather than snapping back.
+      if (!matched) {
+        const atBottom =
+          window.innerHeight + window.scrollY >=
+          document.documentElement.scrollHeight - 4;
+        if (atBottom) current = SECTIONS[SECTIONS.length - 1].id;
+      }
+
       setActive(current);
     };
-    onScroll();
-    window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
+
+    // Measured straight from the scroll event rather than deferred to an
+    // animation frame: six rect reads is cheap, and a deferred measure
+    // freezes the marker wherever rAF is throttled.
+    measure();
+    window.addEventListener("scroll", measure, { passive: true });
+    window.addEventListener("resize", measure);
+
+    // Second trigger. An observer watching a thin band at the reading line
+    // fires on its own whenever a boundary crosses it, so the marker still
+    // tracks if scroll events arrive sparsely — during a smooth-scroll
+    // animation, say, or an anchor jump.
+    const io = new IntersectionObserver(() => measure(), {
+      rootMargin: "-30% 0px -69% 0px",
+      threshold: 0,
+    });
+    for (const s of SECTIONS) {
+      const el = document.getElementById(s.id);
+      if (el) io.observe(el);
+    }
+
+    return () => {
+      io.disconnect();
+      window.removeEventListener("scroll", measure);
+      window.removeEventListener("resize", measure);
+    };
   }, []);
 
   return (
@@ -65,6 +113,15 @@ export function SectionIndex() {
                   }`}
                 >
                   {s.n}
+                </span>
+                <span
+                  className={`whitespace-nowrap text-[10px] uppercase tracking-[0.14em] transition-opacity duration-200 ${
+                    on
+                      ? "text-[color:var(--color-dim)] opacity-100"
+                      : "text-[color:var(--color-dim)] opacity-0 group-hover:opacity-70"
+                  }`}
+                >
+                  {s.label}
                 </span>
               </a>
             </li>

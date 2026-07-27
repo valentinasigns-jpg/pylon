@@ -14,8 +14,7 @@ export const CHAIN = {
 
 // TODO: replace with the real X handle before launch.
 export const X_HANDLE = "https://x.com/PLACEHOLDER";
-// TODO: replace with the real GitHub repo URL before launch.
-export const GITHUB_URL = "https://github.com/PLACEHOLDER/pylon";
+export const GITHUB_URL = "https://github.com/valentinasigns-jpg/pylon";
 
 export const SOURCES = {
   rpc: { label: "JSON-RPC", url: RPC_URL },

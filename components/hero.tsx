@@ -4,7 +4,7 @@ import { usePoll } from "@/lib/use-poll";
 import { num, gwei, compact, DASH } from "@/lib/format";
 import { CHAIN } from "@/lib/config";
 import { LivePill, Skeleton } from "./primitives";
-import { ChainMonitor } from "./chain-monitor";
+import { ChainForm } from "./chain-form";
 
 type ChainFeed = {
   ok: boolean;
@@ -141,9 +141,30 @@ export function Hero() {
             </div>
           </div>
 
-          {/* right: live monitor */}
-          <div className="lg:pt-1">
-            <ChainMonitor />
+          {/* right: the living form — a wireframe surface driven by the
+              same chain readings shown on the left */}
+          <div className="relative order-first lg:order-none lg:pt-1">
+            <div className="relative aspect-square w-full max-w-[560px] lg:mx-auto">
+              <ChainForm />
+
+              {/* corner ticks, so it reads as a viewport and not a sticker */}
+              <span aria-hidden className="absolute left-0 top-0 h-3 w-3 border-l border-t border-[color:var(--color-accent)]/45" />
+              <span aria-hidden className="absolute right-0 top-0 h-3 w-3 border-r border-t border-[color:var(--color-accent)]/45" />
+              <span aria-hidden className="absolute bottom-0 left-0 h-3 w-3 border-b border-l border-[color:var(--color-accent)]/45" />
+              <span aria-hidden className="absolute bottom-0 right-0 h-3 w-3 border-b border-r border-[color:var(--color-accent)]/45" />
+
+              <span className="absolute left-0 top-0 -translate-y-5 text-[10px] uppercase tracking-[0.18em] text-[color:var(--color-dim)]">
+                surface · live
+              </span>
+              <span className="absolute right-0 top-0 -translate-y-5 text-[10px] uppercase tracking-[0.18em] text-[color:var(--color-dim)]">
+                chain {CHAIN.id}
+              </span>
+            </div>
+
+            <p className="mx-auto mt-6 max-w-[560px] text-[10px] uppercase leading-relaxed tracking-[0.14em] text-[color:var(--color-dim)]">
+              amplitude ← base fee · brightness ← tx in block · ripple ← each
+              new block · tilt ← pointer
+            </p>
           </div>
         </div>
       </div>

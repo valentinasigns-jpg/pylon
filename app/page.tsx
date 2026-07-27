@@ -5,6 +5,7 @@ import { GasChart } from "@/components/gas-chart";
 import { StocksGrid } from "@/components/stocks-grid";
 import { SearchPanel } from "@/components/search-panel";
 import { Gauges } from "@/components/gauges";
+import { ChainMonitor } from "@/components/chain-monitor";
 import { Endpoint } from "@/components/endpoint";
 import { SectionHead } from "@/components/primitives";
 import { CHAIN, RPC_URL, BLOCKSCOUT } from "@/lib/config";
@@ -15,14 +16,17 @@ export default function Home() {
       <Hero />
 
       <div className="mx-auto max-w-[1400px] space-y-14 px-4 py-14 sm:px-6">
-        {/* network gauges */}
+        {/* network gauges + live monitor */}
         <section id="network" className="scroll-mt-20">
           <SectionHead
             index="01"
             title="Network"
             sub="Instantaneous readings from the head of the chain. Every gauge states the range it is scaled against — none of them are normalised to look busy."
           />
-          <Gauges />
+          <div className="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)]">
+            <Gauges />
+            <ChainMonitor />
+          </div>
         </section>
 
         <LiveBlocks limit={15} />

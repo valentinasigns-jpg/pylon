@@ -1,27 +1,34 @@
 import { RPC_URL, BLOCKSCOUT } from "./config";
+import { fetchWithTimeout, retry, UpstreamError } from "./upstream";
 
 /** Minimal JSON-RPC client. Server-side only. */
 export async function rpc<T = unknown>(
   method: string,
   params: unknown[] = [],
-  revalidate = 5,
 ): Promise<T> {
-  const res = await fetch(RPC_URL, {
-    method: "POST",
-    headers: { "content-type": "application/json" },
-    body: JSON.stringify({ jsonrpc: "2.0", id: 1, method, params }),
-    next: { revalidate },
-  });
-  if (!res.ok) throw new Error(`rpc ${method} http ${res.status}`);
-  const json = await res.json();
-  if (json.error) throw new Error(`rpc ${method}: ${json.error.message}`);
-  return json.result as T;
+  return retry(
+    async () => {
+      const res = await fetchWithTimeout(RPC_URL, {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ jsonrpc: "2.0", id: 1, method, params }),
+      });
+      if (!res.ok) {
+        throw new UpstreamError(`http ${res.status}`, "rpc", res.status);
+      }
+      const json = await res.json();
+      if (json.error) {
+        throw new UpstreamError(json.error.message, "rpc");
+      }
+      return json.result as T;
+    },
+    { label: `rpc ${method}` },
+  );
 }
 
 /** Batch JSON-RPC — one round trip for many calls. */
 export async function rpcBatch<T = unknown>(
   calls: Array<{ method: string; params?: unknown[] }>,
-  revalidate = 5,
 ): Promise<T[]> {
   const body = calls.map((c, i) => ({
     jsonrpc: "2.0",
@@ -29,31 +36,43 @@ export async function rpcBatch<T = unknown>(
     method: c.method,
     params: c.params ?? [],
   }));
-  const res = await fetch(RPC_URL, {
-    method: "POST",
-    headers: { "content-type": "application/json" },
-    body: JSON.stringify(body),
-    next: { revalidate },
-  });
-  if (!res.ok) throw new Error(`rpc batch http ${res.status}`);
-  const json = await res.json();
-  if (!Array.isArray(json)) throw new Error("rpc batch: bad shape");
-  return json
-    .sort((a, b) => a.id - b.id)
-    .map((r) => (r.error ? null : r.result)) as T[];
+
+  return retry(
+    async () => {
+      const res = await fetchWithTimeout(RPC_URL, {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify(body),
+      });
+      if (!res.ok) {
+        throw new UpstreamError(`http ${res.status}`, "rpc", res.status);
+      }
+      const json = await res.json();
+      if (!Array.isArray(json)) {
+        throw new UpstreamError("batch response was not an array", "rpc");
+      }
+      return json
+        .sort((a, b) => a.id - b.id)
+        .map((r) => (r.error ? null : r.result)) as T[];
+    },
+    { label: `rpc batch x${calls.length}` },
+  );
 }
 
 /** Blockscout REST helper. Server-side only. */
-export async function scout<T = unknown>(
-  path: string,
-  revalidate = 10,
-): Promise<T> {
-  const res = await fetch(`${BLOCKSCOUT}${path}`, {
-    headers: { accept: "application/json" },
-    next: { revalidate },
-  });
-  if (!res.ok) throw new Error(`blockscout ${path} http ${res.status}`);
-  return (await res.json()) as T;
+export async function scout<T = unknown>(path: string): Promise<T> {
+  return retry(
+    async () => {
+      const res = await fetchWithTimeout(`${BLOCKSCOUT}${path}`, {
+        headers: { accept: "application/json" },
+      });
+      if (!res.ok) {
+        throw new UpstreamError(`http ${res.status}`, "blockscout", res.status);
+      }
+      return (await res.json()) as T;
+    },
+    { label: `blockscout ${path}` },
+  );
 }
 
 export const hexToNum = (h: string | null | undefined): number =>

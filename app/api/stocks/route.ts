@@ -1,20 +1,21 @@
 import { NextResponse } from "next/server";
 import { scout } from "@/lib/rpc";
+import { memo } from "@/lib/upstream";
 import { STOCK_TOKENS } from "@/lib/config";
 
-export const revalidate = 0;
+export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
+export const maxDuration = 20;
+
+// Equity token prices move on a far slower clock than blocks do.
+const TTL_MS = 20000;
 
 type ScoutToken = {
-  address_hash?: string;
   name?: string;
-  symbol?: string;
-  decimals?: string;
   exchange_rate?: string | null;
   circulating_market_cap?: string | null;
   volume_24h?: string | null;
   holders_count?: string | null;
-  total_supply?: string | null;
   icon_url?: string | null;
 };
 
@@ -24,11 +25,11 @@ const n = (v: string | null | undefined): number | null => {
   return Number.isFinite(x) ? x : null;
 };
 
-export async function GET() {
-  const results = await Promise.all(
+async function load() {
+  return Promise.all(
     STOCK_TOKENS.map(async (t) => {
       try {
-        const d = await scout<ScoutToken>(`/api/v2/tokens/${t.address}`, 10);
+        const d = await scout<ScoutToken>(`/api/v2/tokens/${t.address}`);
         return {
           symbol: t.symbol,
           address: t.address,
@@ -55,12 +56,23 @@ export async function GET() {
       }
     }),
   );
+}
 
-  const anyOk = results.some((r) => r.ok && r.price !== null);
-
-  return NextResponse.json({
-    ok: anyOk,
-    ts: Date.now(),
-    stocks: results,
-  });
+export async function GET() {
+  try {
+    const { value, stale } = await memo("stocks", TTL_MS, load);
+    const anyOk = value.some((r) => r.ok && r.price !== null);
+    return NextResponse.json({
+      ok: anyOk,
+      stale,
+      ts: Date.now(),
+      stocks: value,
+    });
+  } catch (err) {
+    console.error("[pylon] /api/stocks:", (err as Error).message);
+    return NextResponse.json(
+      { ok: false, error: (err as Error).message, ts: Date.now(), stocks: [] },
+      { status: 200 },
+    );
+  }
 }

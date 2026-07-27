@@ -1,8 +1,9 @@
 import { NextResponse } from "next/server";
 import { rpc, scout, hexToNum, type RawBlock } from "@/lib/rpc";
 
-export const revalidate = 0;
+export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
+export const maxDuration = 20;
 
 type TxRaw = {
   hash: string;
@@ -11,9 +12,7 @@ type TxRaw = {
   to: string | null;
   value: string;
   gas: string;
-  gasPrice?: string;
   nonce: string;
-  input?: string;
 };
 
 type ReceiptRaw = {
@@ -34,13 +33,13 @@ export async function GET(req: Request) {
     // --- block number ---
     if (/^\d+$/.test(q)) {
       const hex = `0x${Number(q).toString(16)}`;
-      const b = await rpc<RawBlock | null>(
-        "eth_getBlockByNumber",
-        [hex, false],
-        0,
-      );
+      const b = await rpc<RawBlock | null>("eth_getBlockByNumber", [hex, false]);
       if (!b) {
-        return NextResponse.json({ ok: false, kind: "block", error: "block not found" });
+        return NextResponse.json({
+          ok: false,
+          kind: "block",
+          error: "block not found",
+        });
       }
       return NextResponse.json({
         ok: true,
@@ -59,19 +58,19 @@ export async function GET(req: Request) {
       });
     }
 
-    // --- tx hash (32 bytes) ---
+    // --- tx hash ---
     if (/^0x[a-fA-F0-9]{64}$/.test(q)) {
-      const tx = await rpc<TxRaw | null>("eth_getTransactionByHash", [q], 0);
+      const tx = await rpc<TxRaw | null>("eth_getTransactionByHash", [q]);
       if (!tx) {
-        return NextResponse.json({ ok: false, kind: "tx", error: "transaction not found" });
+        return NextResponse.json({
+          ok: false,
+          kind: "tx",
+          error: "transaction not found",
+        });
       }
       let receipt: ReceiptRaw | null = null;
       try {
-        receipt = await rpc<ReceiptRaw | null>(
-          "eth_getTransactionReceipt",
-          [q],
-          0,
-        );
+        receipt = await rpc<ReceiptRaw | null>("eth_getTransactionReceipt", [q]);
       } catch {
         receipt = null;
       }
@@ -86,7 +85,11 @@ export async function GET(req: Request) {
           valueWei: tx.value ? hexToNum(tx.value) : 0,
           gasLimit: hexToNum(tx.gas),
           nonce: hexToNum(tx.nonce),
-          status: receipt ? (hexToNum(receipt.status) === 1 ? "success" : "failed") : null,
+          status: receipt
+            ? hexToNum(receipt.status) === 1
+              ? "success"
+              : "failed"
+            : null,
           gasUsed: receipt ? hexToNum(receipt.gasUsed) : null,
           effectiveGasPriceWei: receipt?.effectiveGasPrice
             ? hexToNum(receipt.effectiveGasPrice)
@@ -97,15 +100,14 @@ export async function GET(req: Request) {
       });
     }
 
-    // --- address (20 bytes) ---
+    // --- address ---
     if (/^0x[a-fA-F0-9]{40}$/.test(q)) {
       const [balHex, nonceHex, code] = await Promise.all([
-        rpc<string>("eth_getBalance", [q, "latest"], 0),
-        rpc<string>("eth_getTransactionCount", [q, "latest"], 0),
-        rpc<string>("eth_getCode", [q, "latest"], 0).catch(() => "0x"),
+        rpc<string>("eth_getBalance", [q, "latest"]),
+        rpc<string>("eth_getTransactionCount", [q, "latest"]),
+        rpc<string>("eth_getCode", [q, "latest"]).catch(() => "0x"),
       ]);
 
-      // Token metadata is a bonus if the address happens to be a token.
       let token: {
         name: string | null;
         symbol: string | null;
@@ -118,7 +120,7 @@ export async function GET(req: Request) {
           symbol?: string;
           exchange_rate?: string | null;
           holders_count?: string | null;
-        }>(`/api/v2/tokens/${q}`, 10);
+        }>(`/api/v2/tokens/${q}`);
         if (t?.symbol) {
           token = {
             name: t.name ?? null,
@@ -154,6 +156,7 @@ export async function GET(req: Request) {
         "Enter a block number, a 66-character transaction hash, or a 42-character address.",
     });
   } catch (err) {
+    console.error("[pylon] /api/search:", (err as Error).message);
     return NextResponse.json({
       ok: false,
       kind: "error",

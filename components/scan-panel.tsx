@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type FormEvent, type ReactNode } from "react";
+import { useCallback, useEffect, useRef, useState, type FormEvent, type ReactNode } from "react";
 import { Search as SearchIcon } from "lucide-react";
 import { num, usd, compact, truncMid, pct, DASH } from "@/lib/format";
 import { BLOCKSCOUT } from "@/lib/config";
@@ -127,9 +127,7 @@ export function ScanPanel({ initial = "" }: { initial?: string }) {
   const [res, setRes] = useState<Response | null>(null);
   const [busy, setBusy] = useState(false);
 
-  async function submit(e: FormEvent) {
-    e.preventDefault();
-    const query = q.trim();
+  const run = useCallback(async (query: string) => {
     if (!query) return;
     setBusy(true);
     setRes(null);
@@ -143,7 +141,24 @@ export function ScanPanel({ initial = "" }: { initial?: string }) {
     } finally {
       setBusy(false);
     }
+  }, []);
+
+  function submit(e: FormEvent) {
+    e.preventDefault();
+    void run(q.trim());
   }
+
+  /**
+   * Arriving from /new or any other link with an address in the query runs
+   * the check straight away. Landing on a prefilled box that still needs a
+   * click would waste the one gesture the link was meant to save.
+   */
+  const autoRan = useRef(false);
+  useEffect(() => {
+    if (autoRan.current) return;
+    autoRan.current = true;
+    if (/^0x[a-fA-F0-9]{40}$/.test(initial.trim())) void run(initial.trim());
+  }, [initial, run]);
 
   const d = res?.ok ? res.data : null;
 

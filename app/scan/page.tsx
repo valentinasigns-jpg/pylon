@@ -12,14 +12,20 @@ export const metadata: Metadata = {
     "Paste a contract address on Robinhood Chain and see what is actually established about it — age, deployer, holders, verified source, and the functions its code exposes. No safety score.",
 };
 
-export default function ScanPage() {
+export default async function ScanPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ address?: string }>;
+}) {
+  const { address } = await searchParams;
+
   return (
     <PageShell
       title="Check a token"
       lede={`Paste a contract address on ${CHAIN.name}. PYLON reads what the public sources say about it — who deployed it, when, whether the source is verified, what the code can do, and how concentrated the holdings are — and prints each answer next to where it came from.`}
       aside={<WPylonMast />}
     >
-      <ScanPanel />
+      <ScanPanel initial={address ?? ""} />
 
       <section>
         <div className="grid grid-cols-1 gap-px border border-[color:var(--color-border)] bg-[color:var(--color-border)] lg:grid-cols-2">

@@ -5,6 +5,8 @@ const cols: Array<{ head: string; items: Array<{ label: string; href: string; ex
   {
     head: "Product",
     items: [
+      { label: "Dashboard", href: "/app" },
+      { label: "Check a token", href: "/scan" },
       { label: "Blocks", href: "/blocks" },
       { label: "Gas", href: "/gas" },
       { label: "Stocks", href: "/stocks" },

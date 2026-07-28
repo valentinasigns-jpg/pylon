@@ -1,0 +1,44 @@
+import { NextResponse } from "next/server";
+import { scanAddress } from "@/lib/scan";
+import { memo } from "@/lib/upstream";
+
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
+export const maxDuration = 30;
+
+/**
+ * A scan is six or seven upstream reads. Holding the result briefly means a
+ * visitor pasting the same address twice, or two visitors checking the same
+ * token, costs one pass rather than two.
+ */
+const SCAN_TTL_MS = 30000;
+
+export async function GET(req: Request) {
+  const raw = (new URL(req.url).searchParams.get("address") ?? "").trim();
+
+  if (!raw) {
+    return NextResponse.json({ ok: false, error: "no address given" });
+  }
+  if (!/^0x[a-fA-F0-9]{40}$/.test(raw)) {
+    return NextResponse.json({
+      ok: false,
+      error:
+        "That is not a contract address. Paste the 42-character address, starting 0x.",
+    });
+  }
+
+  try {
+    const { value, stale } = await memo(
+      `scan:${raw.toLowerCase()}`,
+      SCAN_TTL_MS,
+      () => scanAddress(raw),
+    );
+    return NextResponse.json({ ok: true, stale, data: value });
+  } catch (err) {
+    console.error("[pylon] /api/scan:", (err as Error).message);
+    return NextResponse.json({
+      ok: false,
+      error: `the explorer did not answer: ${(err as Error).message}`,
+    });
+  }
+}

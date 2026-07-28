@@ -139,6 +139,16 @@ export default function Home() {
                     </Link>{" "}
                     — the tokenized stocks issued on the chain.
                   </li>
+                  <li>
+                    <Link
+                      href="/scan"
+                      className="text-[color:var(--color-fg)] hover:text-[color:var(--color-accent)]"
+                    >
+                      Check a token
+                    </Link>{" "}
+                    — what a contract actually is, and whether the ticker on it
+                    belongs to that address.
+                  </li>
                 </ul>
                 <p className="mt-4 text-[12px] leading-relaxed text-[color:var(--color-dim)]">
                   All of it on one screen in the{" "}

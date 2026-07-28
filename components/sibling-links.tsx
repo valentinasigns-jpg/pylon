@@ -4,6 +4,7 @@ const PANELS = [
   { id: "blocks", href: "/blocks", label: "Blocks" },
   { id: "gas", href: "/gas", label: "Base fee" },
   { id: "stocks", href: "/stocks", label: "Equities" },
+  { id: "scan", href: "/scan", label: "Check a token" },
 ] as const;
 
 /**

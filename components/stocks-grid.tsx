@@ -1,9 +1,17 @@
 "use client";
 
+import Link from "next/link";
 import { usePoll } from "@/lib/use-poll";
 import { price, usd, compact, truncMid, DASH } from "@/lib/format";
 import { BLOCKSCOUT } from "@/lib/config";
 import { LivePill, SectionHead, Skeleton, FeedMeta } from "./primitives";
+
+type Canonical =
+  | { state: "canonical"; listed: { symbol: string; address: string } }
+  | { state: "impostor"; listed: { symbol: string; address: string } }
+  | { state: "unlisted-symbol" }
+  | { state: "no-symbol" }
+  | { state: "unchecked"; reason: string };
 
 type Stock = {
   symbol: string;
@@ -14,9 +22,44 @@ type Stock = {
   volume24h: number | null;
   holders: number | null;
   icon: string | null;
+  canonical?: Canonical;
   ok: boolean;
 };
 type Feed = { ok: boolean; stocks: Stock[] };
+
+/**
+ * Whether the address on this card is the one Robinhood publishes for the
+ * ticker. Shown on every card, including when it matches — a check you only
+ * see when it fails is a check nobody trusts.
+ */
+function CanonicalTag({ c }: { c: Canonical | undefined }) {
+  if (!c || c.state === "unchecked") {
+    return (
+      <span className="text-[10px] uppercase tracking-[0.12em] text-[color:var(--color-dim)]">
+        not checked
+      </span>
+    );
+  }
+  if (c.state === "canonical") {
+    return (
+      <span className="text-[10px] uppercase tracking-[0.12em] text-[color:var(--color-accent)]">
+        in robinhood&rsquo;s list
+      </span>
+    );
+  }
+  if (c.state === "impostor") {
+    return (
+      <span className="text-[10px] uppercase tracking-[0.12em] text-[color:var(--color-warn)]">
+        ticker match, wrong address
+      </span>
+    );
+  }
+  return (
+    <span className="text-[10px] uppercase tracking-[0.12em] text-[color:var(--color-dim)]">
+      not in the list
+    </span>
+  );
+}
 
 export function StocksGrid() {
   const { data, live, loading, updatedAt, reason, source, stale } =
@@ -110,8 +153,11 @@ export function StocksGrid() {
                 </div>
               </dl>
 
-              <div className="mt-3 truncate text-[10px] text-[color:var(--color-dim)]">
-                {truncMid(s.address, 8, 6)}
+              <div className="mt-3 flex items-center justify-between gap-2">
+                <span className="truncate text-[10px] text-[color:var(--color-dim)]">
+                  {truncMid(s.address, 8, 6)}
+                </span>
+                <CanonicalTag c={s.canonical} />
               </div>
             </a>
           ))}
@@ -130,6 +176,17 @@ export function StocksGrid() {
         bare node cannot produce them. These figures describe the on-chain
         token, not the underlying security. A daily price change is not
         published by the endpoint, so none is shown.
+      </p>
+      <p className="mt-2 text-[11px] leading-relaxed text-[color:var(--color-dim)]">
+        Every address above is compared against the contract list Robinhood
+        publishes before it is displayed. Check any other address yourself on{" "}
+        <Link
+          href="/scan"
+          className="text-[color:var(--color-accent)] hover:underline"
+        >
+          the token checker
+        </Link>
+        .
       </p>
     </section>
   );

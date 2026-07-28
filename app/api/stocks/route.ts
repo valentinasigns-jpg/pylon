@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { scout } from "@/lib/rpc";
 import { memo } from "@/lib/upstream";
 import { STOCK_TOKENS } from "@/lib/config";
+import { checkCanonical, getRegistry } from "@/lib/canonical";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -32,8 +33,19 @@ const n = (v: string | null | undefined): number | null => {
 const PER_TOKEN_TIMEOUT_MS = 4500;
 
 async function load() {
+  /**
+   * Every address this panel puts on screen is compared against Robinhood's
+   * published contract list before it is shown. The list is the reason the
+   * comparison is possible at all: Robinhood states that a token carrying a
+   * matching ticker at a different address is not theirs, and a page that
+   * displays equity tickers without checking that is repeating the claim
+   * rather than verifying it.
+   */
+  const registry = await getRegistry();
+
   return Promise.all(
     STOCK_TOKENS.map(async (t) => {
+      const canonical = checkCanonical(registry, t.address, t.symbol);
       try {
         const d = await scout<ScoutToken>(`/api/v2/tokens/${t.address}`, {
           timeoutMs: PER_TOKEN_TIMEOUT_MS,
@@ -48,6 +60,7 @@ async function load() {
           volume24h: n(d.volume_24h),
           holders: n(d.holders_count),
           icon: d.icon_url ?? null,
+          canonical,
           ok: true as const,
         };
       } catch {
@@ -60,6 +73,7 @@ async function load() {
           volume24h: null,
           holders: null,
           icon: null,
+          canonical,
           ok: false as const,
         };
       }

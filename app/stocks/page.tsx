@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { StocksGrid } from "@/components/stocks-grid";
 import { PageShell } from "@/components/page-shell";
 import { WStockTape } from "@/components/w-stock-tape";
@@ -90,6 +91,20 @@ export default function StocksPage() {
             issuer and are reproduced without alteration. PYLON does not
             verify, endorse, or vouch for any token listed here, and is not
             affiliated with Robinhood Markets, Inc.
+          </p>
+          <p className="mt-3 max-w-[76ch] text-[13px] leading-relaxed text-[color:var(--color-dim)]">
+            What is checked is identity, and only identity: every address
+            above is compared against the contract list Robinhood publishes,
+            and each card says how that comparison came out. A token with one
+            of these tickers at any other address is not a Robinhood Stock
+            Token —{" "}
+            <Link
+              href="/scan"
+              className="text-[color:var(--color-accent)] hover:underline"
+            >
+              paste it into the checker
+            </Link>{" "}
+            and see what it actually is.
           </p>
         </div>
       </section>

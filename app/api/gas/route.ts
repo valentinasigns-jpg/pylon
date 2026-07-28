@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { rpcBatch, hexToNum, type RawBlock } from "@/lib/rpc";
 import { memo, withFallback, type Trace } from "@/lib/upstream";
 import { getHeight, scoutBlocks } from "@/lib/chain-reads";
+import { withLimit } from "@/lib/api-guard";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -91,7 +92,7 @@ async function load() {
   };
 }
 
-export async function GET() {
+export const GET = withLimit(async () => {
   try {
     const { value, stale } = await memo("gas", TTL_MS, load);
     return NextResponse.json({
@@ -117,4 +118,4 @@ export async function GET() {
       { status: 200 },
     );
   }
-}
+});

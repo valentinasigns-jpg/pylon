@@ -3,6 +3,7 @@ import { scout } from "@/lib/rpc";
 import { memo } from "@/lib/upstream";
 import { STOCK_TOKENS } from "@/lib/config";
 import { checkCanonical, getRegistry } from "@/lib/canonical";
+import { withLimit } from "@/lib/api-guard";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -81,7 +82,7 @@ async function load() {
   );
 }
 
-export async function GET() {
+export const GET = withLimit(async () => {
   try {
     const { value, stale } = await memo("stocks", TTL_MS, load);
     const anyOk = value.some((r) => r.ok && r.price !== null);
@@ -112,4 +113,4 @@ export async function GET() {
       { status: 200 },
     );
   }
-}
+});

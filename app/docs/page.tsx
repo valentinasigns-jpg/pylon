@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { PageShell } from "@/components/page-shell";
 import { WPylonMast } from "@/components/w-pylon-mast";
 import { Endpoint } from "@/components/endpoint";
@@ -7,7 +8,7 @@ import { RPC_URL, BLOCKSCOUT, CHAIN } from "@/lib/config";
 export const metadata: Metadata = {
   title: "API",
   description:
-    "PYLON exposes the same read-only endpoints its own dashboard uses. No key, no auth, JSON only.",
+    "PYLON exposes the same read-only endpoints its own dashboard uses. No account, no auth, JSON only.",
 };
 
 const endpoints = [
@@ -119,7 +120,7 @@ export default function DocsPage() {
   return (
     <PageShell
       title="API"
-      lede="Every panel on this site is fed by a route handler that proxies a public endpoint. Those handlers are open — no key, no auth, no rate limit beyond what the upstream imposes. Responses are JSON and always carry an ok flag."
+      lede="Every panel on this site is fed by a route handler that proxies a public endpoint. Those handlers are open — no key required, no auth, no account. Responses are JSON and always carry an ok flag, and every one of them reports the tier that served it and what is left of the allowance."
       aside={<WPylonMast />}
     >
       <section>
@@ -157,6 +158,61 @@ export default function DocsPage() {
                 browser.
               </p>
             </div>
+          </div>
+        </div>
+      </section>
+
+      <section>
+        <div className="grid grid-cols-1 gap-px border border-[color:var(--color-border)] bg-[color:var(--color-border)] lg:grid-cols-2">
+          <div className="bg-[color:var(--color-surface)] p-5 sm:p-6">
+            <h2 className="h-display text-[13px] text-[color:var(--color-accent)]">
+              Limits
+            </h2>
+            <p className="mt-3 text-[13px] leading-relaxed text-[color:var(--color-dim)]">
+              Three hundred requests a minute without a key, three thousand
+              with one. Every response carries the tier that served it and
+              what is left, so nothing has to be discovered by hitting a wall.
+            </p>
+            <pre className="mt-3 overflow-x-auto border border-[color:var(--color-border)] bg-[color:var(--color-bg)] p-3 text-[11px] leading-relaxed text-[color:var(--color-fg)]">
+{`x-ratelimit-tier: anonymous
+x-ratelimit-limit: 300
+x-ratelimit-remaining: 297
+x-ratelimit-reset: 1785200000`}
+            </pre>
+            <p className="mt-3 text-[12px] leading-relaxed text-[color:var(--color-dim)]">
+              Over the line the endpoint answers 429 with{" "}
+              <span className="text-[color:var(--color-fg)]">retry-after</span>{" "}
+              and an ok flag of false, in the same JSON shape as everything
+              else. The full picture is on{" "}
+              <Link
+                href="/tiers"
+                className="text-[color:var(--color-accent)] hover:underline"
+              >
+                the tiers page
+              </Link>
+              .
+            </p>
+          </div>
+
+          <div className="bg-[color:var(--color-surface)] p-5 sm:p-6">
+            <h2 className="h-display text-[13px] text-[color:var(--color-accent)]">
+              Keys
+            </h2>
+            <p className="mt-3 text-[13px] leading-relaxed text-[color:var(--color-dim)]">
+              A key raises the ceiling and identifies the caller rather than
+              the address they happen to sit behind. There is no account
+              attached to one, nothing is asked for to get one, and only a
+              hash of it is ever stored.
+            </p>
+            <p className="mt-3 text-[13px] leading-relaxed text-[color:var(--color-dim)]">
+              Send it as{" "}
+              <span className="text-[color:var(--color-fg)]">x-pylon-key</span>{" "}
+              or as{" "}
+              <span className="text-[color:var(--color-fg)]">?key=</span>. Ask{" "}
+              <span className="text-[color:var(--color-fg)]">GET /api/keys</span>{" "}
+              which tier you are on. Nothing here is paid, and nothing on this
+              site can take a payment.
+            </p>
           </div>
         </div>
       </section>

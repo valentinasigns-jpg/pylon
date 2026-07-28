@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { rpc, scout, hexToNum, type RawBlock } from "@/lib/rpc";
+import { withLimit } from "@/lib/api-guard";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -23,7 +24,7 @@ type ReceiptRaw = {
   logs?: unknown[];
 };
 
-export async function GET(req: Request) {
+export const GET = withLimit(async (req: Request) => {
   const q = (new URL(req.url).searchParams.get("q") ?? "").trim();
   if (!q) {
     return NextResponse.json({ ok: false, kind: "empty", error: "empty query" });
@@ -163,4 +164,4 @@ export async function GET(req: Request) {
       error: (err as Error).message,
     });
   }
-}
+});

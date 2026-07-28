@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { scout } from "@/lib/rpc";
 import { memo } from "@/lib/upstream";
+import { withLimit } from "@/lib/api-guard";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -126,7 +127,7 @@ async function load(): Promise<NewContract[]> {
   });
 }
 
-export async function GET() {
+export const GET = withLimit(async () => {
   try {
     const { value, stale } = await memo("new-contracts", TTL_MS, load);
     return NextResponse.json({
@@ -151,4 +152,4 @@ export async function GET() {
       contracts: [],
     });
   }
-}
+});

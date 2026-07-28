@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { rpcBatch, hexToNum, type RawBlock } from "@/lib/rpc";
 import { memo, type Trace } from "@/lib/upstream";
 import { getTotals } from "@/lib/chain-reads";
+import { withLimit } from "@/lib/api-guard";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -39,7 +40,7 @@ async function load() {
   };
 }
 
-export async function GET() {
+export const GET = withLimit(async () => {
   try {
     // Aggregates run on their own 30s cache and resolve to null on failure,
     // so they can never slow down or break the core reading.
@@ -70,4 +71,4 @@ export async function GET() {
       { status: 200 },
     );
   }
-}
+});

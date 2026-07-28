@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { scanAddress } from "@/lib/scan";
 import { memo } from "@/lib/upstream";
+import { withLimit } from "@/lib/api-guard";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -17,7 +18,7 @@ export const maxDuration = 45;
  */
 const SCAN_TTL_MS = 30000;
 
-export async function GET(req: Request) {
+export const GET = withLimit(async (req: Request) => {
   const raw = (new URL(req.url).searchParams.get("address") ?? "").trim();
 
   if (!raw) {
@@ -45,4 +46,4 @@ export async function GET(req: Request) {
       error: `the explorer did not answer: ${(err as Error).message}`,
     });
   }
-}
+});

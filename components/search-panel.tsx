@@ -37,7 +37,10 @@ const eth = (wei: number) =>
  * directly under the headline figures, where a second heading between them
  * would only push the field below the fold.
  */
-export function SearchPanel({ bare = false }: { bare?: boolean } = {}) {
+export function SearchPanel({
+  bare = false,
+  index,
+}: { bare?: boolean; index?: string } = {}) {
   const [q, setQ] = useState("");
   const [res, setRes] = useState<Result | null>(null);
   const [busy, setBusy] = useState(false);
@@ -64,7 +67,7 @@ export function SearchPanel({ bare = false }: { bare?: boolean } = {}) {
     <section id="search" className="scroll-mt-20">
       {!bare && (
         <SectionHead
-          index="05"
+          index={index}
           title="Search"
           sub="Paste a block number, a transaction hash, or an address. Queries hit the chain directly."
         />

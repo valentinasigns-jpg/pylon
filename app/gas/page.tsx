@@ -6,7 +6,7 @@ import { SiblingLinks } from "@/components/sibling-links";
 import { CHAIN } from "@/lib/config";
 
 export const metadata: Metadata = {
-  title: "Gas",
+  title: "Base fee",
   description:
     "Base fee per gas on Robinhood Chain, sampled across recent blocks and plotted as a live series.",
 };
@@ -14,12 +14,11 @@ export const metadata: Metadata = {
 export default function GasPage() {
   return (
     <PageShell
-      index="03"
-      title="Gas"
+      title="Base fee"
       lede={`Base fee per gas across recent blocks on ${CHAIN.name}. Sampled every fourth block so the window covers a meaningful stretch of chain history rather than a single second.`}
       aside={<WGasScope />}
     >
-      <GasChart />
+      <GasChart bare />
 
       <SiblingLinks current="gas" />
 

@@ -15,12 +15,11 @@ export const metadata: Metadata = {
 export default function BlocksPage() {
   return (
     <PageShell
-      index="02"
       title="Blocks"
       lede={`Every block sealed on ${CHAIN.name}, newest first. Each row is a direct read of eth_getBlockByNumber against the public RPC — no indexer sits in between.`}
       aside={<WBlockCore />}
     >
-      <LiveBlocks limit={15} />
+      <LiveBlocks limit={15} bare />
 
       <SiblingLinks current="blocks" />
 

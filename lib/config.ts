@@ -50,8 +50,8 @@ export const NAV = [
   { label: "Just deployed", href: "/new" },
   { label: "Check a token", href: "/scan" },
   { label: "Blocks", href: "/blocks" },
-  { label: "Gas", href: "/gas" },
-  { label: "Stocks", href: "/stocks" },
+  { label: "Base fee", href: "/gas" },
+  { label: "Equities", href: "/stocks" },
   { label: "About", href: "/about" },
 ];
 

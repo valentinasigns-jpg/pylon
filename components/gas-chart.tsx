@@ -17,7 +17,18 @@ const W = 1000;
 const H = 240;
 const PAD = { t: 14, r: 10, b: 24, l: 10 };
 
-export function GasChart() {
+/**
+ * `bare` drops the heading. On a page whose own title already names this
+ * panel, a second copy of the word directly under it is noise; the live
+ * pill and controls stay where they are.
+ */
+export function GasChart({
+  index,
+  bare = false,
+}: {
+  index?: string;
+  bare?: boolean;
+} = {}) {
   const { data, live, loading, updatedAt, reason, source, fellBack, stale } =
     usePoll<Feed>("/api/gas", 10000);
   const target = useMemo(() => data?.points ?? [], [data]);
@@ -145,10 +156,12 @@ export function GasChart() {
   return (
     <section id="gas" className="scroll-mt-20">
       <SectionHead
-        index="03"
-        title="Base fee"
+        index={index}
+        title={bare ? undefined : "Base fee"}
         sub={
-          data?.stride
+          bare
+            ? undefined
+            : data?.stride
             ? `Last ${shown.length} samples, every ${data.stride}th block. Values in gwei.`
             : "Base fee per gas over recent blocks."
         }

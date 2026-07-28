@@ -21,7 +21,20 @@ type Feed = { ok: boolean; blocks: Block[] };
 /** How long a row keeps its "just arrived" rail. */
 const FRESH_MS = 800;
 
-export function LiveBlocks({ limit = 15 }: { limit?: number }) {
+/**
+ * `bare` drops the heading. On a page whose own title already names this
+ * panel, a second copy of the word directly under it is noise; the live
+ * pill and controls stay where they are.
+ */
+export function LiveBlocks({
+  limit = 15,
+  index,
+  bare = false,
+}: {
+  limit?: number;
+  index?: string;
+  bare?: boolean;
+}) {
   const { data, live, loading, updatedAt, reason, source, fellBack, stale } =
     usePoll<Feed>("/api/blocks");
   const [now, setNow] = useState(() => Date.now());
@@ -74,9 +87,13 @@ export function LiveBlocks({ limit = 15 }: { limit?: number }) {
   return (
     <section id="blocks" className="scroll-mt-20">
       <SectionHead
-        index="02"
-        title="Live blocks"
-        sub={`Newest first, capped at ${limit}. Polled from eth_getBlockByNumber.`}
+        index={index}
+        title={bare ? undefined : "Blocks"}
+        sub={
+          bare
+            ? undefined
+            : `Newest first, capped at ${limit}. Polled from eth_getBlockByNumber.`
+        }
         right={
           <span className="flex items-center gap-2">
             <span className="relative inline-flex h-1.5 w-1.5">

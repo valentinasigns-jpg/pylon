@@ -118,7 +118,6 @@ GET /api/search?q=0xaF3D76f1834A1d425780943C99Ea8A608f8a93f9
 export default function DocsPage() {
   return (
     <PageShell
-      index="07"
       title="API"
       lede="Every panel on this site is fed by a route handler that proxies a public endpoint. Those handlers are open — no key, no auth, no rate limit beyond what the upstream imposes. Responses are JSON and always carry an ok flag."
       aside={<WPylonMast />}

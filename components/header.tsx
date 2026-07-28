@@ -16,7 +16,12 @@ export function Header() {
       <div className="mx-auto flex h-14 max-w-[1400px] items-center justify-between gap-4 px-4 sm:px-6">
         {/* Wordmark and nav travel together. Left as two ends of a
             space-between row, a 1400px header opened a gap between them
-            wider than the menu itself. */}
+            wider than the menu itself.
+
+            The full menu appears at xl rather than md: seven labels measure
+            809px, and below about 1170px of viewport that runs into the
+            status pill on the right. Under that width the same seven live
+            in the drawer. */}
         <div className="flex min-w-0 items-center gap-8">
           <Link href="/" className="flex shrink-0 items-center gap-2.5">
             <PylonMark />
@@ -25,7 +30,7 @@ export function Header() {
             </span>
           </Link>
 
-          <nav className="hidden items-center gap-6 md:flex">
+          <nav className="hidden items-center gap-6 xl:flex">
             {NAV.map((n) => (
               <Link
                 key={n.href}
@@ -75,7 +80,7 @@ export function Header() {
             onClick={() => setOpen((v) => !v)}
             aria-label="Menu"
             aria-expanded={open}
-            className="grid h-8 w-8 place-items-center border border-[color:var(--color-border)] text-[color:var(--color-dim)] md:hidden"
+            className="grid h-8 w-8 place-items-center border border-[color:var(--color-border)] text-[color:var(--color-dim)] xl:hidden"
           >
             {open ? <X size={14} /> : <Menu size={14} />}
           </button>
@@ -83,7 +88,7 @@ export function Header() {
       </div>
 
       {open && (
-        <nav className="border-t border-[color:var(--color-border)] bg-[color:var(--color-bg)] md:hidden">
+        <nav className="border-t border-[color:var(--color-border)] bg-[color:var(--color-bg)] xl:hidden">
           <div className="mx-auto max-w-[1400px] px-4 py-2 sm:px-6">
             {NAV.map((n) => (
               <Link

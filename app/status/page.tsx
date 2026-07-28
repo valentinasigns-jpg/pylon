@@ -12,7 +12,6 @@ export const metadata: Metadata = {
 export default function StatusPage() {
   return (
     <PageShell
-      index="10"
       title="Status"
       lede="Every panel on this site is only as good as the two endpoints behind it. This page probes both directly, on the same request path the dashboard uses, and reports what came back."
     >

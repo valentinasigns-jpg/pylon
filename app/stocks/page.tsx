@@ -8,7 +8,7 @@ import { STOCK_TOKENS, BLOCKSCOUT, CHAIN } from "@/lib/config";
 import { truncMid } from "@/lib/format";
 
 export const metadata: Metadata = {
-  title: "Tokenized equities",
+  title: "Equities",
   description:
     "ERC-20 equity tokens issued on Robinhood Chain — price, holders and 24h volume read from the chain explorer.",
 };
@@ -16,12 +16,11 @@ export const metadata: Metadata = {
 export default function StocksPage() {
   return (
     <PageShell
-      index="04"
-      title="Tokenized equities"
+      title="Equities"
       lede={`Equity tokens issued as ERC-20 contracts on ${CHAIN.name}. Everything here describes the on-chain token — its price feed, its holder count, its traded volume — not the underlying security on any exchange.`}
       aside={<WStockTape />}
     >
-      <StocksGrid />
+      <StocksGrid bare />
 
       <SiblingLinks current="stocks" />
 

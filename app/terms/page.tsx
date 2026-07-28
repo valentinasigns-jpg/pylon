@@ -11,7 +11,6 @@ export const metadata: Metadata = {
 export default function TermsPage() {
   return (
     <PageShell
-      index="09"
       title="Terms"
       lede="PYLON is an informational tool provided as-is. Reading it is the whole agreement."
     >

@@ -39,16 +39,16 @@ export default function AppPage() {
       </section>
 
       <Reveal delay={0}>
-        <LiveBlocks limit={15} />
+        <LiveBlocks limit={15} index="02" />
       </Reveal>
       <Reveal delay={40}>
-        <GasChart />
+        <GasChart index="03" />
       </Reveal>
       <Reveal delay={80}>
-        <StocksGrid />
+        <StocksGrid index="04" />
       </Reveal>
       <Reveal delay={120}>
-        <SearchPanel />
+        <SearchPanel index="05" />
       </Reveal>
     </PageShell>
   );

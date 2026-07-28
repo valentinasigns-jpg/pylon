@@ -10,7 +10,6 @@ export const metadata: Metadata = {
 export default function PrivacyPage() {
   return (
     <PageShell
-      index="08"
       title="Privacy"
       lede="Short version: PYLON collects nothing about you, because it has nothing to collect it with."
     >

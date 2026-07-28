@@ -14,7 +14,6 @@ export const metadata: Metadata = {
 export default function AboutPage() {
   return (
     <PageShell
-      index="06"
       title="About"
       lede={`PYLON is a public, read-only dashboard for ${CHAIN.name}. It exists because watching a chain should not require an account.`}
       aside={<WPylonMast />}

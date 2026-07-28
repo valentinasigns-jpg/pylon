@@ -28,29 +28,39 @@ export function SectionHead({
 }: {
   /** Omit where the number is decoration rather than sequence. */
   index?: string;
-  title: string;
+  /**
+   * Omit on a page whose own heading already names this panel. The rail and
+   * whatever sits in `right` stay; only the second copy of the name goes.
+   */
+  title?: string;
   sub?: string;
   right?: ReactNode;
 }) {
   return (
-    <div className="mb-4 flex flex-wrap items-end justify-between gap-3 border-b border-[color:var(--color-border)] pb-3">
-      <div>
-        <div className="flex items-baseline gap-3">
-          {index && (
-            <span className="text-[11px] text-[color:var(--color-accent)]">
-              [{index}]
-            </span>
+    <div
+      className={`mb-4 flex flex-wrap items-end gap-3 border-b border-[color:var(--color-border)] pb-3 ${
+        title ? "justify-between" : "justify-end"
+      }`}
+    >
+      {title && (
+        <div>
+          <div className="flex items-baseline gap-3">
+            {index && (
+              <span className="text-[11px] text-[color:var(--color-accent)]">
+                [{index}]
+              </span>
+            )}
+            <h2 className="h-display text-lg text-[color:var(--color-fg)] sm:text-xl">
+              {title}
+            </h2>
+          </div>
+          {sub && (
+            <p className="mt-1 text-[12px] leading-relaxed text-[color:var(--color-dim)]">
+              {sub}
+            </p>
           )}
-          <h2 className="h-display text-lg text-[color:var(--color-fg)] sm:text-xl">
-            {title}
-          </h2>
         </div>
-        {sub && (
-          <p className="mt-1 text-[12px] leading-relaxed text-[color:var(--color-dim)]">
-            {sub}
-          </p>
-        )}
-      </div>
+      )}
       {right}
     </div>
   );

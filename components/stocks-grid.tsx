@@ -61,7 +61,18 @@ function CanonicalTag({ c }: { c: Canonical | undefined }) {
   );
 }
 
-export function StocksGrid() {
+/**
+ * `bare` drops the heading. On a page whose own title already names this
+ * panel, a second copy of the word directly under it is noise; the live
+ * pill and controls stay where they are.
+ */
+export function StocksGrid({
+  index,
+  bare = false,
+}: {
+  index?: string;
+  bare?: boolean;
+} = {}) {
   const { data, live, loading, updatedAt, reason, source, stale } =
     usePoll<Feed>("/api/stocks", 15000);
   const stocks = data?.stocks ?? [];
@@ -69,9 +80,13 @@ export function StocksGrid() {
   return (
     <section id="stocks" className="scroll-mt-20">
       <SectionHead
-        index="04"
-        title="Tokenized equities"
-        sub="ERC-20 equity tokens issued on Robinhood Chain. Price, holders and 24h volume are read from the chain explorer, not from an equities feed."
+        index={index}
+        title={bare ? undefined : "Equities"}
+        sub={
+          bare
+            ? undefined
+            : "ERC-20 equity tokens issued on Robinhood Chain. Price, holders and 24h volume are read from the chain explorer, not from an equities feed."
+        }
         right={<LivePill live={live} reason={reason} />}
       />
 

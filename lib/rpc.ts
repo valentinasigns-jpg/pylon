@@ -1,6 +1,6 @@
 import { RPC_URL, RPC_FALLBACK_URL, BLOCKSCOUT } from "./config";
 import {
-  fetchWithTimeout,
+  fetchJson,
   retry,
   withFallback,
   UpstreamError,
@@ -18,7 +18,7 @@ async function rpcAt<T>(
 ): Promise<T> {
   return retry(
     async () => {
-      const res = await fetchWithTimeout(
+      const json = await fetchJson<{ error?: { message: string }; result: T }>(
         host,
         {
           method: "POST",
@@ -26,13 +26,10 @@ async function rpcAt<T>(
           body: JSON.stringify({ jsonrpc: "2.0", id: 1, method, params }),
         },
         timeoutMs,
+        host,
       );
-      if (!res.ok) {
-        throw new UpstreamError(`http ${res.status}`, host, res.status);
-      }
-      const json = await res.json();
       if (json.error) throw new UpstreamError(json.error.message, host);
-      return json.result as T;
+      return json.result;
     },
     { label, attempts },
   );
@@ -83,7 +80,7 @@ async function rpcBatchAt<T>(
 
   return retry(
     async () => {
-      const res = await fetchWithTimeout(
+      const json = await fetchJson<unknown>(
         host,
         {
           method: "POST",
@@ -91,11 +88,8 @@ async function rpcBatchAt<T>(
           body: JSON.stringify(body),
         },
         timeoutMs,
+        host,
       );
-      if (!res.ok) {
-        throw new UpstreamError(`http ${res.status}`, host, res.status);
-      }
-      const json = await res.json();
       if (!Array.isArray(json)) {
         throw new UpstreamError("batch response was not an array", host);
       }
@@ -167,17 +161,13 @@ export async function scout<T = unknown>(
   { timeoutMs, attempts }: { timeoutMs?: number; attempts?: number } = {},
 ): Promise<T> {
   return retry(
-    async () => {
-      const res = await fetchWithTimeout(
+    () =>
+      fetchJson<T>(
         `${BLOCKSCOUT}${path}`,
         { headers: { accept: "application/json" } },
         timeoutMs,
-      );
-      if (!res.ok) {
-        throw new UpstreamError(`http ${res.status}`, "blockscout", res.status);
-      }
-      return (await res.json()) as T;
-    },
+        "blockscout",
+      ),
     { label: `blockscout ${path}`, attempts },
   );
 }

@@ -137,6 +137,42 @@ export async function fetchWithTimeout(
 }
 
 /**
+ * The same, but the deadline covers reading the body as well as receiving
+ * the headers.
+ *
+ * This matters more than it sounds. `fetchWithTimeout` clears its timer the
+ * moment a response object exists, which is before a single byte of the
+ * body has been read — so an upstream that answers instantly and then
+ * dribbles out a large payload is unbounded. A verified contract's record
+ * on this explorer is a quarter of a megabyte of source and bytecode, and
+ * one of them took thirty-seven seconds to arrive behind an eight-second
+ * timeout that had already been cleared. Every caller that parses JSON
+ * should use this instead.
+ */
+export async function fetchJson<T>(
+  url: string,
+  init: RequestInit = {},
+  timeoutMs = UPSTREAM_TIMEOUT_MS,
+  source = "upstream",
+): Promise<T> {
+  const ctl = new AbortController();
+  const timer = setTimeout(() => ctl.abort(), timeoutMs);
+  try {
+    const res = await fetch(url, {
+      ...init,
+      signal: ctl.signal,
+      cache: "no-store",
+    });
+    if (!res.ok) {
+      throw new UpstreamError(`http ${res.status}`, source, res.status);
+    }
+    return (await res.json()) as T;
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+/**
  * Retry with a short backoff. Two attempts total by default — enough to
  * ride out a single dropped connection without doubling worst-case latency.
  */

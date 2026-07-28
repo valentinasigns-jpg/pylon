@@ -97,13 +97,20 @@ export default async function ScanPage({
 
           <div className="bg-[color:var(--color-surface)] p-5 sm:p-6">
             <h2 className="h-display text-[13px] text-[color:var(--color-accent)]">
-              What is not shown
+              Liquidity is asked for, not guessed
             </h2>
             <p className="mt-3 text-[13px] leading-relaxed text-[color:var(--color-dim)]">
-              There is no liquidity figure. Neither the node nor the explorer
-              on {CHAIN.name} publishes pool reserves or a list of pairs, and
-              there is no honest way to derive one from a transfer count. Every
-              scan says so in place of a number.
+              Nothing publishes a list of pools for a token, so the Uniswap V3
+              factory on {CHAIN.name} is asked directly — this token against
+              USDG and against WETH, at every standard fee tier. Any pool it
+              names is shown with the balances that pool actually holds, read
+              with balanceOf. No dollar figure is derived from them.
+            </p>
+            <p className="mt-3 text-[13px] leading-relaxed text-[color:var(--color-dim)]">
+              Finding none is a result, not a blank. Robinhood&rsquo;s own
+              stock tokens have no pool, because they do not trade on a DEX. A
+              token that presents itself as tradeable and has none is telling
+              you something.
             </p>
             <p className="mt-3 text-[13px] leading-relaxed text-[color:var(--color-dim)]">
               Sources:{" "}

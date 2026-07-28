@@ -11,6 +11,7 @@
 
 import { scout } from "./rpc";
 import { checkCanonical, getRegistry, type CanonicalVerdict } from "./canonical";
+import { readLiquidity, type LiquidityReading } from "./liquidity";
 import { UpstreamError } from "./upstream";
 
 export type AbiEntry = {
@@ -320,6 +321,7 @@ export type ScanResult = {
     topShare: number | null;
     top: Array<{ address: string; value: string; share: number | null; isContract: boolean | null }>;
   } | null;
+  liquidity: LiquidityReading;
   /** Signals a source did not supply, each with the reason it is absent. */
   missing: Array<{ field: string; reason: string }>;
 };
@@ -333,13 +335,21 @@ export async function scanAddress(address: string): Promise<ScanResult> {
    * the implementation's ABI need an answer first — that is two waves, not
    * the five round trips a naive top-to-bottom reading would take.
    */
-  const [addrRes, tokenRes, contractRes, holdersRes, registry] = await Promise.all([
-    optional<ScoutAddress>(`/api/v2/addresses/${address}`),
-    optional<ScoutToken>(`/api/v2/tokens/${address}`),
-    optional<ScoutContract>(`/api/v2/smart-contracts/${address}`),
-    optional<ScoutHolders>(`/api/v2/tokens/${address}/holders`),
-    getRegistry(),
-  ]);
+  const [addrRes, tokenRes, contractRes, holdersRes, registry, liquidity] =
+    await Promise.all([
+      optional<ScoutAddress>(`/api/v2/addresses/${address}`),
+      optional<ScoutToken>(`/api/v2/tokens/${address}`),
+      optional<ScoutContract>(`/api/v2/smart-contracts/${address}`),
+      optional<ScoutHolders>(`/api/v2/tokens/${address}/holders`),
+      getRegistry(),
+      // Only needs the address, so it belongs in the first wave rather than
+      // adding its own budget to the end of the second. It gets a slightly
+      // longer one: eight eth_calls in a single batch is more work than any
+      // REST read here, and at eight seconds the node was missing the
+      // deadline often enough to report "pools unknown" for tokens that
+      // plainly have one.
+      readLiquidity(address, 11000),
+    ]);
 
   const addr = got(addrRes);
   const token = got(tokenRes);
@@ -400,6 +410,7 @@ export async function scanAddress(address: string): Promise<ScanResult> {
     abi: { read: false, from: null, via: null },
     powers: null,
     distribution: null,
+    liquidity,
     missing,
   };
 
@@ -596,17 +607,12 @@ export async function scanAddress(address: string): Promise<ScanResult> {
   }
 
   // --- liquidity ----------------------------------------------------------
-  /**
-   * Deliberately not reported as a number. Neither the node nor the explorer
-   * on this chain publishes pool reserves or a list of pairs, and there is
-   * no honest way to derive "liquidity" from a transfer count. The page says
-   * so in place of a figure. See the note rendered on /scan.
-   */
-  missing.push({
-    field: "liquidity",
-    reason:
-      "no source PYLON reads publishes pool reserves or pair addresses on this chain, so there is no liquidity figure to show. The traded volume and market value below come from the explorer's price feed, which is not the same thing",
-  });
+  if (liquidity.state === "unchecked") {
+    missing.push({
+      field: "liquidity",
+      reason: `${liquidity.reason}. Whether this token has a pool is therefore unknown — not zero`,
+    });
+  }
 
   return base;
 }

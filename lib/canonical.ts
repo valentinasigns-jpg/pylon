@@ -14,7 +14,13 @@
  * Server-side only.
  */
 
-import { fetchWithTimeout, memo, retry, UpstreamError } from "./upstream";
+import {
+  fetchJson,
+  memo,
+  retry,
+  UpstreamError,
+  UPSTREAM_TIMEOUT_MS,
+} from "./upstream";
 import { CHAIN } from "./config";
 
 export const REGISTRY_URL = "https://api.robinhood.com/rhj/assets";
@@ -52,13 +58,12 @@ type RawAsset = {
 async function fetchRegistry(): Promise<CanonicalToken[]> {
   return retry(
     async () => {
-      const res = await fetchWithTimeout(REGISTRY_URL, {
-        headers: { accept: "application/json" },
-      });
-      if (!res.ok) {
-        throw new UpstreamError(`http ${res.status}`, "registry", res.status);
-      }
-      const json = (await res.json()) as { assets?: RawAsset[] };
+      const json = await fetchJson<{ assets?: RawAsset[] }>(
+        REGISTRY_URL,
+        { headers: { accept: "application/json" } },
+        UPSTREAM_TIMEOUT_MS,
+        "registry",
+      );
       const assets = json.assets ?? [];
 
       const out: CanonicalToken[] = [];

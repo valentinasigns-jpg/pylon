@@ -122,6 +122,106 @@ function Verdict({ result }: { result: ScanResult }) {
   );
 }
 
+/** Raw base-unit balance to something readable, without inventing precision. */
+function units(raw: string | null, decimals: number): string {
+  if (raw === null) return DASH;
+  try {
+    const v = Number(BigInt(raw)) / 10 ** decimals;
+    if (!Number.isFinite(v)) return DASH;
+    return compact(v);
+  } catch {
+    return DASH;
+  }
+}
+
+/**
+ * Whether a Uniswap V3 pool exists for this token, and what sits in it.
+ *
+ * The absence of one is the finding, not a blank: Robinhood's own stock
+ * tokens have no pool because they are not traded on a DEX, while a token
+ * that presents itself as tradeable and has none is saying something.
+ */
+function Liquidity({ result }: { result: ScanResult }) {
+  const l = result.liquidity;
+
+  if (l.state === "unchecked") {
+    return (
+      <Block title="Liquidity">
+        <KV k="Uniswap V3 pools" v="not established" />
+        <div className="max-w-[76ch] py-3 text-[12px] leading-relaxed text-[color:var(--color-dim)]">
+          {l.reason}.
+        </div>
+      </Block>
+    );
+  }
+
+  if (l.state === "none") {
+    return (
+      <Block title="Liquidity">
+        <KV k="Uniswap V3 pools" v="none" />
+        <div className="max-w-[76ch] py-3 text-[12px] leading-relaxed text-[color:var(--color-dim)]">
+          The Uniswap V3 factory was asked for a pool pairing this token with
+          USDG and with WETH at every standard fee tier — {l.checked} questions
+          — and returned none. This token is not traded through a Uniswap V3
+          pool on this chain. It may still trade somewhere PYLON does not read.
+        </div>
+      </Block>
+    );
+  }
+
+  return (
+    <section className="border border-[color:var(--color-border)] bg-[color:var(--color-surface)]">
+      <h3 className="h-display flex flex-wrap items-baseline justify-between gap-3 border-b border-[color:var(--color-border)] bg-[color:var(--color-raised)] px-4 py-2.5 text-[11px] uppercase tracking-[0.14em] text-[color:var(--color-dim)]">
+        <span>Liquidity</span>
+        <span className="text-[color:var(--color-fg)]">
+          {l.pools.length} uniswap v3 pool{l.pools.length === 1 ? "" : "s"}
+        </span>
+      </h3>
+      <div className="divide-y divide-[color:var(--color-border)]">
+        {l.pools.map((p) => (
+          <div key={p.address} className="px-4 py-3">
+            <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
+              <span className="text-[13px] text-[color:var(--color-fg)]">
+                paired with {p.quoteSymbol}
+              </span>
+              <span className="text-[11px] uppercase tracking-[0.12em] text-[color:var(--color-dim)]">
+                {p.feeTier / 10000}% fee tier
+              </span>
+            </div>
+            <div className="mt-1.5 text-[12px] text-[color:var(--color-dim)]">
+              <Addr value={p.address} />
+            </div>
+            <dl className="mt-2 grid grid-cols-2 gap-x-4">
+              <div>
+                <dt className="text-[10px] uppercase tracking-[0.12em] text-[color:var(--color-dim)]">
+                  token in pool
+                </dt>
+                <dd className="text-[13px] text-[color:var(--color-fg)]">
+                  {units(p.tokenReserve, result.token?.decimals ?? 18)}
+                </dd>
+              </div>
+              <div>
+                <dt className="text-[10px] uppercase tracking-[0.12em] text-[color:var(--color-dim)]">
+                  {p.quoteSymbol.toLowerCase()} in pool
+                </dt>
+                <dd className="text-[13px] text-[color:var(--color-fg)]">
+                  {units(p.quoteReserve, p.quoteDecimals)}
+                </dd>
+              </div>
+            </dl>
+          </div>
+        ))}
+      </div>
+      <p className="border-t border-[color:var(--color-border)] px-4 py-3 text-[11px] leading-relaxed text-[color:var(--color-dim)]">
+        Pool addresses come from the Uniswap V3 factory on this chain; the
+        balances are what each pool contract actually holds right now, read
+        with balanceOf. They are not converted to dollars, and a balance
+        sitting in a pool is not a promise that it will still be there.
+      </p>
+    </section>
+  );
+}
+
 export function ScanPanel({ initial = "" }: { initial?: string }) {
   const [q, setQ] = useState(initial);
   const [res, setRes] = useState<Response | null>(null);
@@ -458,6 +558,8 @@ export function ScanPanel({ initial = "" }: { initial?: string }) {
               </div>
             </section>
           )}
+
+          <Liquidity result={d} />
 
           {d.token && (
             <Block title="What the explorer prices it at">

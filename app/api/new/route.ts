@@ -4,7 +4,8 @@ import { memo } from "@/lib/upstream";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
-export const maxDuration = 30;
+// Ten rows of two chained reads each, on top of a possible cold start.
+export const maxDuration = 45;
 
 /**
  * New contracts arrive constantly on this chain, but the feed costs three

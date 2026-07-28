@@ -4,7 +4,11 @@ import { memo } from "@/lib/upstream";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
-export const maxDuration = 30;
+// Internal budgets cap a scan at roughly twenty seconds of upstream work,
+// but a cold function on top of a cold explorer was measured at 30.5s in
+// production — exactly the previous ceiling. This is headroom, not licence
+// to be slow.
+export const maxDuration = 45;
 
 /**
  * A scan is six or seven upstream reads. Holding the result briefly means a

@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { Menu, X } from "lucide-react";
-import { NAV, X_HANDLE } from "@/lib/config";
+import { NAV } from "@/lib/config";
 import { usePoll } from "@/lib/use-poll";
 import { LivePill } from "./primitives";
 
@@ -64,16 +64,17 @@ export function Header() {
               </span>
           */}
 
-          {/* TODO: replace X_HANDLE in lib/config.ts with the real handle */}
-          <a
-            href={X_HANDLE}
-            target="_blank"
-            rel="noopener noreferrer"
-            aria-label="X"
-            className="grid h-8 w-8 place-items-center border border-[color:var(--color-border)] text-[color:var(--color-dim)] hover:border-[color:var(--color-accent)] hover:text-[color:var(--color-accent)]"
-          >
-            <XGlyph />
-          </a>
+          {/* No X link until there is an X account. A button pointing at
+              x.com/PLACEHOLDER is a dead link and a placeholder shipped to
+              production, and the quality bar for this project forbids both.
+              Restore this, with the real handle in lib/config.ts:
+
+              <a href={X_HANDLE} target="_blank" rel="noopener noreferrer"
+                 aria-label="X"
+                 className="grid h-8 w-8 place-items-center border border-[color:var(--color-border)] text-[color:var(--color-dim)] hover:border-[color:var(--color-accent)] hover:text-[color:var(--color-accent)]">
+                <XGlyph />
+              </a>
+          */}
 
           <button
             type="button"
@@ -130,14 +131,6 @@ function PylonMark() {
         strokeWidth="0.8"
         opacity="0.5"
       />
-    </svg>
-  );
-}
-
-function XGlyph() {
-  return (
-    <svg viewBox="0 0 24 24" fill="currentColor" className="h-3.5 w-3.5" aria-hidden>
-      <path d="M18.244 2H21l-6.56 7.5L22.5 22h-6.9l-4.54-6.03L5.9 22H3.14l7.03-8.03L2.5 2h7.03l4.11 5.48L18.24 2zm-1.21 18.4h1.9L7.06 3.5H5.06l11.97 16.9z" />
     </svg>
   );
 }

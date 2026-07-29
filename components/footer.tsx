@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { CHAIN, GITHUB_URL, X_HANDLE, BLOCKSCOUT } from "@/lib/config";
+import { CHAIN, GITHUB_URL, BLOCKSCOUT } from "@/lib/config";
 
 const cols: Array<{ head: string; items: Array<{ label: string; href: string; ext?: boolean }> }> = [
   {
@@ -106,16 +106,8 @@ export function Footer() {
               © 2026 PYLON
             </span>
             <div className="flex items-center gap-4">
-              {/* TODO: replace X_HANDLE in lib/config.ts with the real handle */}
-              <a
-                href={X_HANDLE}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-[11px] text-[color:var(--color-dim)] hover:text-[color:var(--color-accent)]"
-              >
-                X ↗
-              </a>
-              {/* TODO: replace GITHUB_URL in lib/config.ts with the real repo */}
+              {/* X goes back here once the account exists — see the note in
+                  components/header.tsx. */}
               <a
                 href={GITHUB_URL}
                 target="_blank"

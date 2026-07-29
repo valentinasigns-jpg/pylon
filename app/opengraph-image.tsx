@@ -1,7 +1,7 @@
 import { ImageResponse } from "next/og";
 
 export const runtime = "nodejs";
-export const alt = "PYLON — Every block on Robinhood Chain, as it lands";
+export const alt = "PYLON — Prove the draw wasn't rigged";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
@@ -105,12 +105,11 @@ export default async function Image() {
               flexDirection: "column",
             }}
           >
-            <div>Every block on</div>
-            <div>Robinhood Chain,</div>
-            <div style={{ color: ACCENT }}>as it lands.</div>
+            <div>Prove the draw</div>
+            <div style={{ color: ACCENT }}>wasn&rsquo;t rigged.</div>
           </div>
           <div style={{ fontSize: 21, color: DIM, display: "flex" }}>
-            Public, read-only. No login, no wallet, no tracking.
+            Commit a list. Draw with an oracle nobody controls. Recompute it yourself.
           </div>
         </div>
 
@@ -127,7 +126,7 @@ export default async function Image() {
           }}
         >
           <div style={{ display: "flex" }}>ARBITRUM ORBIT · CHAIN ID 4663</div>
-          <div style={{ display: "flex" }}>BLOCKS · GAS · EQUITIES</div>
+          <div style={{ display: "flex" }}>COMMIT · DRAW · REVEAL</div>
         </div>
       </div>
     ),

@@ -19,8 +19,12 @@ export const CHAIN = {
   explorer: BLOCKSCOUT,
 };
 
-// TODO: replace with the real X handle before launch.
-export const X_HANDLE = "https://x.com/PLACEHOLDER";
+/**
+ * No X handle yet, so nothing links to one. A placeholder URL shipped to
+ * production is a dead link; the slot in the header and footer is commented
+ * rather than filled with a guess. Set this and restore those two blocks.
+ */
+export const X_HANDLE: string | null = null;
 export const GITHUB_URL = "https://github.com/valentinasigns-jpg/pylon";
 
 export const SOURCES = {

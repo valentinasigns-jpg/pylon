@@ -45,13 +45,16 @@ export const STOCK_TOKENS: Array<{ symbol: string; address: string }> = [
   { symbol: "SPY",   address: "0x117cc2133c37B721F49dE2A7a74833232B3B4C0C" },
 ];
 
+/**
+ * The protocol leads. The explorer pages that used to be the whole site
+ * still work and are still linked, but they are no longer what this is for
+ * — see /status, where the chain readings now live as a sign of life.
+ */
 export const NAV = [
+  { label: "Draws", href: "/draws" },
+  { label: "Commit a list", href: "/create" },
+  { label: "Docs", href: "/docs" },
   { label: "Dashboard", href: "/app" },
-  { label: "Just deployed", href: "/new" },
-  { label: "Check a token", href: "/scan" },
-  { label: "Blocks", href: "/blocks" },
-  { label: "Base fee", href: "/gas" },
-  { label: "Equities", href: "/stocks" },
   { label: "About", href: "/about" },
 ];
 

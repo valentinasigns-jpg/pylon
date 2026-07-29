@@ -13,7 +13,14 @@ const REQUEST_TIMEOUT_MS = 12000;
 const FAILURES_BEFORE_OFFLINE = 2;
 
 /** Why there is nothing to show. */
-export type FeedReason = "unreachable" | "empty" | null;
+/**
+ * Why a panel has nothing to show. Three situations, not two: a silent
+ * endpoint is an outage, an answer with nothing in it is an absence, and
+ * "nothing was ever deployed to ask" is neither — it is the expected state
+ * of a page whose contract does not exist yet, and showing it as an outage
+ * would be a lie about our own uptime.
+ */
+export type FeedReason = "unreachable" | "empty" | "not-deployed" | null;
 
 export type Feed<T> = {
   data: T | null;
@@ -78,7 +85,23 @@ export function usePoll<T extends Envelope>(
 
       if (!alive.current) return;
 
-      if (json?.ok === false) {
+      /**
+       * "Nothing is deployed to ask" is a settled fact, not a failure. It
+       * must not spend two rounds pretending to be an outage before it
+       * admits what it is, and the payload has to reach the component —
+       * the server's explanation of why there is nothing is the only thing
+       * worth rendering.
+       */
+      if (json?.reason === "not-deployed") {
+        failures.current = 0;
+        setData(json);
+        setLive(false);
+        setStale(false);
+        setReason("not-deployed");
+        setSource(null);
+        setFellBack(false);
+        setUpdatedAt(Date.now());
+      } else if (json?.ok === false) {
         failures.current += 1;
         if (failures.current >= FAILURES_BEFORE_OFFLINE) {
           setLive(false);

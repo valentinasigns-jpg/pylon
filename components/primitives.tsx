@@ -77,7 +77,13 @@ export function Skeleton({ className = "" }: { className?: string }) {
  */
 export function OfflinePill({ reason }: { reason?: FeedReason }) {
   const text =
-    reason === "empty" ? "no data yet" : reason ? "no response" : "feed offline";
+    reason === "not-deployed"
+      ? "not deployed"
+      : reason === "empty"
+        ? "no data yet"
+        : reason
+          ? "no response"
+          : "feed offline";
   return (
     <span className="inline-flex items-center gap-2 border border-[color:var(--color-border)] px-2 py-1 text-[10px] uppercase tracking-[0.14em] text-[color:var(--color-dim)]">
       <span className="h-1.5 w-1.5 bg-[color:var(--color-dim)]" />

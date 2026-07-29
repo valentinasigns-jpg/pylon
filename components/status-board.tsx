@@ -8,7 +8,7 @@ type Source = {
   id: string;
   label: string;
   url: string;
-  status: "up" | "down";
+  status: "up" | "down" | "not-deployed";
   latencyMs: number | null;
   detail: string | null;
 };
@@ -90,7 +90,9 @@ export function StatusBoard() {
               <div className="flex items-center gap-2.5">
                 <span
                   className={`h-2 w-2 shrink-0 ${
-                    s.status === "up"
+                    s.status === "not-deployed"
+                      ? "bg-[color:var(--color-wait)]"
+                      : s.status === "up"
                       ? "pulse-dot rounded-full bg-[color:var(--color-accent)]"
                       : "bg-[color:var(--color-warn)]"
                   }`}
@@ -100,7 +102,9 @@ export function StatusBoard() {
                 </span>
                 <span
                   className={`border px-1.5 py-0.5 text-[10px] uppercase tracking-[0.14em] ${
-                    s.status === "up"
+                    s.status === "not-deployed"
+                      ? "text-[color:var(--color-wait)]"
+                      : s.status === "up"
                       ? "border-[color:var(--color-accent)]/40 text-[color:var(--color-accent)]"
                       : "border-[color:var(--color-warn)]/40 text-[color:var(--color-warn)]"
                   }`}

@@ -19,7 +19,9 @@ const cols: Array<{ head: string; items: Array<{ label: string; href: string; ex
   {
     head: "Data",
     items: [
-      { label: "API docs", href: "/docs" },
+      { label: "Docs", href: "/docs" },
+      { label: "SDK", href: "/sdk" },
+      { label: "Whitepaper", href: "/whitepaper" },
       { label: "API tiers", href: "/tiers" },
       { label: "Upstream status", href: "/status" },
       // The RPC endpoint accepts POST only — linking it straight from the
@@ -50,7 +52,7 @@ export function Footer() {
               PYLON
             </div>
             <p className="mt-2 max-w-[26ch] text-[12px] leading-relaxed text-[color:var(--color-dim)]">
-              Every block on {CHAIN.name}, as it lands.
+              Verifiable draws on {CHAIN.name}.
             </p>
             <p className="mt-3 text-[11px] text-[color:var(--color-dim)]">
               chain id {CHAIN.id} · {CHAIN.stack}
@@ -91,11 +93,13 @@ export function Footer() {
 
         <div className="mt-10 border-t border-[color:var(--color-border)] pt-6">
           <p className="max-w-3xl text-[11px] leading-relaxed text-[color:var(--color-dim)]">
-            PYLON is an independent, open block explorer. It is not affiliated
-            with, endorsed by, or connected to Robinhood Markets, Inc. or any of
-            its subsidiaries. All data is read from public endpoints and
-            presented as-is, with no warranty of accuracy or availability.
-            Nothing on this site is financial advice.
+            PYLON is an independent, open project. It is not affiliated with,
+            endorsed by, or connected to Robinhood Markets, Inc. or any of its
+            subsidiaries. All data is read from public endpoints and presented
+            as-is, with no warranty of accuracy or availability. Choosing
+            winners from a list is not a game of chance: entrants pay nothing
+            and the contract never holds a prize. Nothing on this site is
+            financial advice.
           </p>
           <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
             <span className="text-[11px] text-[color:var(--color-dim)]">

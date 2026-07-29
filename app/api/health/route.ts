@@ -1,19 +1,137 @@
 import { NextResponse } from "next/server";
+import { createPublicClient, http } from "viem";
 import { RPC_URL, RPC_FALLBACK_URL, BLOCKSCOUT, CHAIN } from "@/lib/config";
 import { fetchWithTimeout, cacheAges, openBreakers } from "@/lib/upstream";
+import { PYLON_DRAW_ABI } from "@/lib/draw-abi";
+import { DRAW_ADDRESS, DICE_ENTROPY, explorerAddress } from "@/lib/draw";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 export const maxDuration = 20;
 
+/**
+ * "not-deployed" is a third state, and lumping it in with "down" would be a
+ * lie about our own availability: nothing is broken, there is simply nothing
+ * there to ask yet.
+ */
 type Probe = {
   id: string;
   label: string;
   url: string;
-  status: "up" | "down";
+  status: "up" | "down" | "not-deployed";
   latencyMs: number | null;
   detail: string | null;
 };
+
+const viemChain = {
+  id: CHAIN.id,
+  name: CHAIN.name,
+  nativeCurrency: { name: "Ether", symbol: "ETH", decimals: 18 },
+  rpcUrls: { default: { http: [RPC_URL] } },
+} as const;
+
+const onchain = createPublicClient({
+  chain: viemChain,
+  transport: http(RPC_URL, { timeout: 8000, retryCount: 0 }),
+});
+
+/** The draw contract itself: is it there, and does it answer? */
+async function probeDraw(): Promise<Probe> {
+  if (!DRAW_ADDRESS) {
+    return {
+      id: "pylon-draw",
+      label: "PylonDraw contract",
+      url: "",
+      status: "not-deployed",
+      latencyMs: null,
+      detail: "no address configured — the contract has not been deployed",
+    };
+  }
+  const t0 = Date.now();
+  try {
+    const count = await onchain.readContract({
+      address: DRAW_ADDRESS as `0x${string}`,
+      abi: PYLON_DRAW_ABI,
+      functionName: "drawCount",
+    });
+    return {
+      id: "pylon-draw",
+      label: "PylonDraw contract",
+      url: explorerAddress(DRAW_ADDRESS),
+      status: "up",
+      latencyMs: Date.now() - t0,
+      detail: `${Number(count).toLocaleString("en-US")} draws created`,
+    };
+  } catch (err) {
+    return {
+      id: "pylon-draw",
+      label: "PylonDraw contract",
+      url: explorerAddress(DRAW_ADDRESS),
+      status: "down",
+      latencyMs: Date.now() - t0,
+      detail: (err as Error).message.slice(0, 90),
+    };
+  }
+}
+
+/**
+ * The randomness oracle. Its fee is read rather than assumed, which doubles
+ * as the liveness check — if this call works, a draw can be requested.
+ */
+async function probeDice(): Promise<Probe> {
+  const t0 = Date.now();
+  try {
+    const provider = (await onchain.readContract({
+      address: DICE_ENTROPY as `0x${string}`,
+      abi: [
+        {
+          type: "function",
+          name: "getDefaultProvider",
+          stateMutability: "view",
+          inputs: [],
+          outputs: [{ type: "address" }],
+        },
+      ] as const,
+      functionName: "getDefaultProvider",
+    })) as string;
+
+    const fee = (await onchain.readContract({
+      address: DICE_ENTROPY as `0x${string}`,
+      abi: [
+        {
+          type: "function",
+          name: "getFeeV2",
+          stateMutability: "view",
+          inputs: [
+            { name: "provider", type: "address" },
+            { name: "gasLimit", type: "uint32" },
+          ],
+          outputs: [{ type: "uint128" }],
+        },
+      ] as const,
+      functionName: "getFeeV2",
+      args: [provider as `0x${string}`, 120000],
+    })) as bigint;
+
+    return {
+      id: "dice-entropy",
+      label: "Dice randomness oracle",
+      url: explorerAddress(DICE_ENTROPY),
+      status: "up",
+      latencyMs: Date.now() - t0,
+      detail: `fee ${(Number(fee) / 1e18).toFixed(6)} ETH · provider ${provider.slice(0, 10)}…`,
+    };
+  } catch (err) {
+    return {
+      id: "dice-entropy",
+      label: "Dice randomness oracle",
+      url: explorerAddress(DICE_ENTROPY),
+      status: "down",
+      latencyMs: Date.now() - t0,
+      detail: (err as Error).message.slice(0, 90),
+    };
+  }
+}
 
 async function probeRpc(): Promise<Probe> {
   const t0 = Date.now();
@@ -152,12 +270,14 @@ async function probeFallback(): Promise<Probe> {
 }
 
 export async function GET() {
-  const [rpc, blockscout, fallback] = await Promise.all([
+  const [rpc, blockscout, fallback, draw, dice] = await Promise.all([
     probeRpc(),
     probeScout(),
     probeFallback(),
+    probeDraw(),
+    probeDice(),
   ]);
-  const sources = [rpc, blockscout, fallback];
+  const sources = [rpc, blockscout, fallback, dice, draw];
 
   // Chain reads survive on either JSON-RPC host, so the dashboard is only
   // truly down when both are gone.
@@ -173,5 +293,12 @@ export async function GET() {
     cacheAgeMs: cacheAges(),
     // Primaries currently being stepped over after repeated failures.
     skipping: openBreakers(),
+    // A draw needs the oracle as well as a node. Reported separately so an
+    // outage in one is never presented as an outage in the other.
+    draws: {
+      deployed: draw.status !== "not-deployed",
+      contract: draw.status,
+      oracle: dice.status,
+    },
   });
 }

@@ -2,163 +2,431 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { PageShell } from "@/components/page-shell";
 import { WPylonMast } from "@/components/w-pylon-mast";
+import { CodeBlock, Step, QA } from "@/components/code-block";
 import { Endpoint } from "@/components/endpoint";
-import { RPC_URL, BLOCKSCOUT, CHAIN } from "@/lib/config";
+import { CHAIN, RPC_URL, BLOCKSCOUT } from "@/lib/config";
+import {
+  DRAW_ADDRESS,
+  DICE_ENTROPY,
+  DICE_SITE,
+  DRAW_REPO,
+  PROTOCOL_FEE_ETH,
+  DICE_FEE_ETH_TODAY,
+  MAX_WINNERS,
+  explorerAddress,
+} from "@/lib/draw";
 
 export const metadata: Metadata = {
-  title: "API",
+  title: "Docs",
   description:
-    "PYLON exposes the same read-only endpoints its own dashboard uses. No account, no auth, JSON only.",
+    "How to run a verifiable draw: the calls, the selection algorithm, the entrant list format, and honest answers to what happens when things go wrong.",
 };
 
-const endpoints = [
-  {
-    path: "/api/chain",
-    desc: "Height, gas price, base fee, transactions in the latest block, plus chain-wide aggregates.",
-    shape: `{
-  "ok": true,
-  "ts": 1785157513000,
-  "height": 20754129,
-  "gasPriceWei": 35818000,
-  "baseFeeWei": 36040000,
-  "txInLatest": 4,
-  "blockTimestamp": 1785157513,
-  "gasUsedLatest": 644785,
-  "totals": {
-    "blocks": 20752846,
-    "transactions": 170380502,
-    "addresses": 4420816,
-    "txToday": 7082160,
-    "avgBlockTimeMs": 91
-  }
-}`,
-  },
-  {
-    path: "/api/blocks",
-    desc: "The 15 most recent blocks, newest first.",
-    shape: `{
-  "ok": true,
-  "ts": 1785157513000,
-  "blocks": [
-    {
-      "number": 20754129,
-      "hash": "0x3ce4…4e2c",
-      "timestamp": 1785157513,
-      "txCount": 4,
-      "gasUsed": 1444280,
-      "gasLimit": 1125899906842624,
-      "baseFeeWei": 36040000
-    }
-  ]
-}`,
-  },
-  {
-    path: "/api/gas",
-    desc: "Base fee sampled across 100 points at a fixed block stride.",
-    shape: `{
-  "ok": true,
-  "ts": 1785157513000,
-  "stride": 4,
-  "points": [
-    { "block": 20753733, "baseFeeWei": 35924000, "gasUsed": 634937, "txCount": 9 }
-  ]
-}`,
-  },
-  {
-    path: "/api/stocks",
-    desc: "The tokenized equity contracts tracked by this dashboard.",
-    shape: `{
-  "ok": true,
-  "ts": 1785157513000,
-  "stocks": [
-    {
-      "symbol": "AAPL",
-      "address": "0xaF3D…93f9",
-      "name": "Apple • Robinhood Token",
-      "price": 334.21,
-      "marketCap": 1063930.24,
-      "volume24h": 205254.98,
-      "holders": 27817,
-      "icon": "https://cdn.robinhood.com/…",
-      "ok": true
-    }
-  ]
-}`,
-  },
-  {
-    path: "/api/health",
-    desc: "Probes each upstream independently and reports status, latency, the serving region and current server-cache ages. Rendered for humans at /status.",
-    shape: `{
-  "ok": true,
-  "ts": 1785178630269,
-  "region": "iad1",
-  "sources": [
-    {
-      "id": "rpc",
-      "label": "JSON-RPC",
-      "url": "https://rpc.mainnet.chain.robinhood.com",
-      "status": "up",
-      "latencyMs": 82,
-      "detail": "chain id 4663"
-    }
-  ],
-  "cacheAgeMs": { "chain": 1200, "blocks": 800 }
-}`,
-  },
-  {
-    path: "/api/search?q=",
-    desc: "Dispatches on the shape of the query: digits → block, 66 chars → transaction, 42 chars → address.",
-    shape: `GET /api/search?q=20754129
-GET /api/search?q=0x3ce42387…7314e2c
-GET /api/search?q=0xaF3D76f1834A1d425780943C99Ea8A608f8a93f9
+const SOLIDITY = `// SPDX-License-Identifier: Apache-2.0
+pragma solidity ^0.8.0;
 
-{ "ok": true, "kind": "block" | "tx" | "address", "data": { … } }`,
-  },
-];
+interface IPylonDraw {
+    function createDraw(
+        bytes32 entrantsRoot,
+        uint32  entrantCount,
+        uint16  winnerCount,
+        uint64  drawAt,
+        string calldata metadataURI
+    ) external payable returns (uint256 drawId);
+
+    function executeDraw(uint256 drawId) external payable;
+    function retryDraw(uint256 drawId) external;
+
+    function getDraw(uint256 drawId) external view returns (
+        bytes32 entrantsRoot,
+        bytes32 randomValue,
+        uint32[] memory winnerIndices,
+        uint8 status
+    );
+
+    function verifyWinner(
+        uint256 drawId,
+        uint32 index,
+        address entrant,
+        bytes32[] calldata proof
+    ) external view returns (bool);
+}`;
+
+const TS = `import { buildTree, selectWinners, proofFor } from "@pylon/draw-sdk";
+
+// Order is part of the commitment: entrant i is bound to position i.
+const entrants = ["0x…", "0x…", "0x…"];
+const { root } = buildTree(entrants);
+
+// Publish the list exactly as it stands above, then commit the root.
+await pylon.write.createDraw(
+  [root, entrants.length, 3, BigInt(drawAt), "ipfs://…/entrants.json"],
+  { value: parseEther("0.0001") },
+);
+
+// After drawAt, anyone may run it. The oracle fee is read live.
+const fee = await dice.read.getFeeV2([provider, 120_000]);
+await pylon.write.executeDraw([drawId], { value: fee });
+
+// Once revealed, recompute the result from published data alone.
+const winners = selectWinners(randomValue, entrants.length, 3);
+const proof = proofFor(buildTree(entrants), winners[0]);`;
+
+const ALGO = `for i in 0 … k-1:
+    j = i + keccak256(abi.encode(randomValue, i)) % (n - i)
+
+    winner[i]  = whatever value currently sits at position j
+    position j = whatever value currently sits at position i
+
+    # position i is finished with and never read again`;
+
+const LIST = `{
+  "entrants": [
+    "0x1111111111111111111111111111111111111111",
+    "0x2222222222222222222222222222222222222222",
+    "0x3333333333333333333333333333333333333333"
+  ]
+}`;
+
+function Row({ k, children }: { k: string; children: React.ReactNode }) {
+  return (
+    <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 border-b border-[color:var(--color-border)] py-2.5 last:border-b-0">
+      <dt className="text-[11px] uppercase tracking-[0.12em] text-[color:var(--color-dim)]">
+        {k}
+      </dt>
+      <dd className="min-w-0 break-all text-right text-[color:var(--color-fg)]">
+        {children}
+      </dd>
+    </div>
+  );
+}
 
 export default function DocsPage() {
   return (
     <PageShell
-      title="API"
-      lede="Every panel on this site is fed by a route handler that proxies a public endpoint. Those handlers are open — no key required, no auth, no account. Responses are JSON and always carry an ok flag, and every one of them reports the tier that served it and what is left of the allowance."
+      title="Docs"
+      lede="Three calls, one pure function, and a list you publish yourself. Everything a verifier needs is on chain or in that file — nothing about checking a draw goes through this site."
       aside={<WPylonMast />}
     >
       <section>
-        <div className="grid grid-cols-1 gap-px border border-[color:var(--color-border)] bg-[color:var(--color-border)] sm:grid-cols-2">
+        <h2 className="h-display mb-3 text-[11px] uppercase tracking-[0.14em] text-[color:var(--color-dim)]">
+          Contracts and network
+        </h2>
+        <div className="grid grid-cols-1 gap-px border border-[color:var(--color-border)] bg-[color:var(--color-border)] lg:grid-cols-2">
           <div className="bg-[color:var(--color-surface)] p-5">
-            <div className="mb-2 text-[11px] uppercase tracking-[0.14em] text-[color:var(--color-dim)]">
-              Upstream RPC
-            </div>
-            <Endpoint
-              url={RPC_URL}
-              method="POST"
-              note="JSON-RPC 2.0. This is not a web page — a browser GET sends an empty body and the node answers with a parse error. Send a POST with a JSON body."
-            />
-          </div>
-          <div className="bg-[color:var(--color-surface)] p-5">
-            <div className="mb-2 text-[11px] uppercase tracking-[0.14em] text-[color:var(--color-dim)]">
-              Upstream explorer
-            </div>
-            <div className="border border-[color:var(--color-border)] bg-[color:var(--color-bg)]">
-              <div className="flex items-stretch">
-                <span className="flex shrink-0 items-center border-r border-[color:var(--color-border)] px-2 text-[10px] uppercase tracking-[0.14em] text-[color:var(--color-accent)]">
-                  GET
-                </span>
+            <dl className="space-y-0 text-[12px]">
+              <Row k="PylonDraw">
+                {DRAW_ADDRESS ? (
+                  <a
+                    href={explorerAddress(DRAW_ADDRESS)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-[color:var(--color-accent)] hover:underline"
+                  >
+                    {DRAW_ADDRESS} ↗
+                  </a>
+                ) : (
+                  <span className="text-[color:var(--color-wait)]">
+                    not deployed — source is in the{" "}
+                    <a
+                      href={DRAW_REPO}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-[color:var(--color-accent)] hover:underline"
+                    >
+                      repository
+                    </a>
+                  </span>
+                )}
+              </Row>
+              <Row k="DiceEntropy">
+                <a
+                  href={explorerAddress(DICE_ENTROPY)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-[color:var(--color-accent)] hover:underline"
+                >
+                  {DICE_ENTROPY} ↗
+                </a>
+              </Row>
+              <Row k="Chain">{`${CHAIN.name} · id ${CHAIN.id} · ${CHAIN.stack}`}</Row>
+              <Row k="Explorer">
                 <a
                   href={BLOCKSCOUT}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="min-w-0 flex-1 overflow-x-auto whitespace-nowrap px-2.5 py-2 text-[12px] text-[color:var(--color-accent)] hover:underline"
+                  className="text-[color:var(--color-accent)] hover:underline"
                 >
                   {BLOCKSCOUT} ↗
                 </a>
-              </div>
-              <p className="border-t border-[color:var(--color-border)] px-2.5 py-1.5 text-[10px] leading-relaxed text-[color:var(--color-dim)]">
-                A normal site, and a REST API under /api/v2. Safe to open in a
-                browser.
-              </p>
-            </div>
+              </Row>
+            </dl>
           </div>
+          <div className="bg-[color:var(--color-surface)] p-5">
+            <dl className="space-y-0 text-[12px]">
+              <Row k="Protocol fee">{`${PROTOCOL_FEE_ETH} ETH per draw, fixed in bytecode`}</Row>
+              <Row k="Oracle fee">
+                <>
+                  read live via{" "}
+                  <span className="text-[color:var(--color-fg)]">getFeeV2</span>{" "}
+                  — {DICE_FEE_ETH_TODAY} ETH today
+                </>
+              </Row>
+              <Row k="Winners">{`up to ${MAX_WINNERS} per draw; the entrant list has no ceiling`}</Row>
+              <Row k="Callback gas">120,000 — the callback stores one word</Row>
+            </dl>
+            <p className="mt-3 text-[11px] leading-relaxed text-[color:var(--color-dim)]">
+              Never hardcode the oracle fee. Dice exposes{" "}
+              <span className="text-[color:var(--color-fg)]">setFee</span>, so a
+              stored figure breaks every draw the day they change it.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <section>
+        <h2 className="h-display mb-1 text-lg text-[color:var(--color-fg)] sm:text-xl">
+          Running a draw
+        </h2>
+        <p className="mb-5 max-w-[76ch] text-[12px] leading-relaxed text-[color:var(--color-dim)]">
+          Commit, draw, reveal. Only the middle step costs anything.
+        </p>
+
+        <div className="space-y-6">
+          <Step n="01" title="Commit the list">
+            <p>
+              Build a Merkle tree over the entrants in the order you intend to
+              publish them, and send the root with the terms. From that moment
+              the list is fixed: nothing can be added or removed without the
+              root changing, and the root is already on chain.
+            </p>
+            <p>
+              Publish the list itself somewhere durable and name that location
+              in{" "}
+              <span className="text-[color:var(--color-fg)]">metadataURI</span>.
+              A commitment nobody can open is not a commitment.
+            </p>
+          </Step>
+
+          <Step n="02" title="Draw">
+            <p>
+              After{" "}
+              <span className="text-[color:var(--color-fg)]">drawAt</span>,
+              anyone may call{" "}
+              <span className="text-[color:var(--color-fg)]">executeDraw</span>{" "}
+              with the current oracle fee. Not only the organiser — a committed
+              draw cannot be abandoned because the outcome stopped being
+              convenient.
+            </p>
+            <p>
+              If the oracle never answers, anyone may call{" "}
+              <span className="text-[color:var(--color-fg)]">retryDraw</span>.
+              The fee goes back to whoever paid it and the draw returns to
+              committed, ready to run again.
+            </p>
+          </Step>
+
+          <Step n="03" title="Reveal, then check">
+            <p>
+              Dice calls back with a random value and the contract records it.
+              The winners are not stored — they follow from the value by a pure
+              function, so anybody can compute them from published data with no
+              contract call at all.
+            </p>
+          </Step>
+        </div>
+
+        <div className="mt-6 space-y-4">
+          <CodeBlock
+            file="draw.ts"
+            note="Three writes and one pure read. The last two lines involve no network."
+          >
+            {TS}
+          </CodeBlock>
+          <CodeBlock file="IPylonDraw.sol">{SOLIDITY}</CodeBlock>
+        </div>
+      </section>
+
+      <section>
+        <h2 className="h-display mb-1 text-lg text-[color:var(--color-fg)] sm:text-xl">
+          The selection algorithm
+        </h2>
+        <p className="mb-4 max-w-[76ch] text-[12px] leading-relaxed text-[color:var(--color-dim)]">
+          Written out in full, because a verifier who has to read our code to
+          know what to check is not independent. Implement this in whatever you
+          like and you should get the same winners.
+        </p>
+        <CodeBlock
+          file="partial Fisher-Yates"
+          note={
+            <>
+              A virtual array of every position from 0 to n-1. Only positions
+              that were actually swapped differ from their own index, so the
+              array is never built — at most k overrides exist whether the list
+              holds twenty names or a million. A repeat is impossible because
+              each step draws from a range that excludes every position already
+              taken.
+            </>
+          }
+        >
+          {ALGO}
+        </CodeBlock>
+        <p className="mt-3 max-w-[76ch] text-[12px] leading-relaxed text-[color:var(--color-dim)]">
+          The same function exists three times — in the contract, in the SDK,
+          and in the page you are reading — and a known-answer test fails if any
+          of them drifts. See{" "}
+          <Link
+            href="/sdk"
+            className="text-[color:var(--color-accent)] hover:underline"
+          >
+            the SDK
+          </Link>{" "}
+          for the implementation and the vectors.
+        </p>
+      </section>
+
+      <section>
+        <h2 className="h-display mb-1 text-lg text-[color:var(--color-fg)] sm:text-xl">
+          The entrant list
+        </h2>
+        <p className="mb-4 max-w-[76ch] text-[12px] leading-relaxed text-[color:var(--color-dim)]">
+          A JSON array of addresses, in the committed order. That is the whole
+          format; there is nothing else to get right.
+        </p>
+        <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+          <CodeBlock file="entrants.json">{LIST}</CodeBlock>
+          <div className="border border-[color:var(--color-border)] bg-[color:var(--color-surface)] p-5">
+            <h3 className="h-display text-[13px] text-[color:var(--color-accent)]">
+              Rules that actually matter
+            </h3>
+            <ul className="mt-3 space-y-2 text-[13px] leading-relaxed text-[color:var(--color-dim)]">
+              <li>
+                <span className="text-[color:var(--color-fg)]">
+                  Order is binding.
+                </span>{" "}
+                Entrant seven is bound to position seven. Sort the file later
+                and the root no longer matches.
+              </li>
+              <li>
+                <span className="text-[color:var(--color-fg)]">
+                  Case does not matter.
+                </span>{" "}
+                Addresses are lower-cased before hashing, so a checksummed file
+                and a lower-case one give the same root.
+              </li>
+              <li>
+                <span className="text-[color:var(--color-fg)]">
+                  Repeats are kept.
+                </span>{" "}
+                A duplicate holds two positions and two chances. That is a
+                legitimate way to weight entries and is never silently undone.
+              </li>
+              <li>
+                <span className="text-[color:var(--color-fg)]">
+                  A leaf is double-hashed.
+                </span>{" "}
+                <span className="break-all text-[color:var(--color-fg)]">
+                  keccak(keccak(abi.encode(uint32 index, address entrant)))
+                </span>{" "}
+                — so no internal node of the tree can be passed off as a leaf.
+              </li>
+              <li>
+                <span className="text-[color:var(--color-fg)]">
+                  Odd nodes rise unchanged.
+                </span>{" "}
+                A lone node at the end of a layer is carried up, never
+                duplicated. Duplicating it is the known way to make two
+                different lists share a root.
+              </li>
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      <section>
+        <h2 className="h-display mb-1 text-lg text-[color:var(--color-fg)] sm:text-xl">
+          What if
+        </h2>
+        <p className="mb-2 max-w-[76ch] text-[12px] leading-relaxed text-[color:var(--color-dim)]">
+          The questions worth asking, answered without hedging.
+        </p>
+        <div className="border border-[color:var(--color-border)] bg-[color:var(--color-surface)] px-5">
+          <dl>
+            <QA q="What if the oracle never answers?">
+              <p>
+                The draw sits in the waiting state. After Dice&rsquo;s refund
+                delay — six L1 blocks, roughly sixty to ninety seconds — anyone
+                can call{" "}
+                <span className="text-[color:var(--color-fg)]">retryDraw</span>.
+                The oracle fee returns to whoever paid it and the draw goes back
+                to committed. Nothing is stranded and nobody has to be trusted
+                to release it.
+              </p>
+            </QA>
+            <QA q="What if the organiser disappears before the draw?">
+              <p>
+                It makes no difference. Once the time passes, anyone can run the
+                draw — a winner, a bystander, you. The organiser is needed to
+                commit and to hand out whatever they promised, not to produce
+                the result.
+              </p>
+            </QA>
+            <QA q="What if the organiser stuffs the list with their own addresses?">
+              <p>
+                The draw will be impeccably fair among those addresses, which is
+                exactly as useless as it sounds. This protocol fixes the
+                selection, not the list. Judging whether the right names went in
+                is your job, and cryptography does not help with it.
+              </p>
+            </QA>
+            <QA q="What if they declare more entrants than the list holds?">
+              <p>
+                A Merkle root says nothing about how many leaves are under it,
+                so the count is taken on the organiser&rsquo;s word. Inflating
+                it lets positions win for which no proof can ever be produced —
+                which anybody notices the first time they check. It is a lie
+                that cannot be hidden, not a lie that is prevented.
+              </p>
+            </QA>
+            <QA q="What if they run several draws and only mention one?">
+              <p>
+                Every draw they created is on{" "}
+                <Link
+                  href="/draws"
+                  className="text-[color:var(--color-accent)] hover:underline"
+                >
+                  the ledger
+                </Link>
+                , under their address, in order. Nothing is filtered, which is
+                the only reason that list is worth reading.
+              </p>
+            </QA>
+            <QA q="What if this site goes down?">
+              <p>
+                Checking a draw does not involve it. The contract is on chain,
+                the list is wherever the organiser put it, and the algorithm is
+                written out above. This site is a convenience; the guarantee
+                does not live here.
+              </p>
+            </QA>
+            <QA q="Can the contract be changed, paused, or drained?">
+              <p>
+                No owner, no pause, no upgrade path, no admin key. The fee
+                destination is fixed at deployment and cannot be repointed. The
+                contract never holds a prize and has no function that would let
+                it — entrants pay nothing and cannot.
+              </p>
+            </QA>
+            <QA q="Is this gambling?">
+              <p>
+                No, and it is not built to become it. There is no stake, no
+                pool, no ticket and no way to send the contract money except the
+                fee for running a draw. It picks names out of a list; the
+                organiser gives out whatever they said they would, by whatever
+                means they choose.
+              </p>
+            </QA>
+          </dl>
         </div>
       </section>
 
@@ -166,106 +434,58 @@ export default function DocsPage() {
         <div className="grid grid-cols-1 gap-px border border-[color:var(--color-border)] bg-[color:var(--color-border)] lg:grid-cols-2">
           <div className="bg-[color:var(--color-surface)] p-5 sm:p-6">
             <h2 className="h-display text-[13px] text-[color:var(--color-accent)]">
-              Limits
+              Reading the chain over HTTP
             </h2>
             <p className="mt-3 text-[13px] leading-relaxed text-[color:var(--color-dim)]">
-              Three hundred requests a minute without a key, three thousand
-              with one. Every response carries the tier that served it and
-              what is left, so nothing has to be discovered by hitting a wall.
+              The endpoints that feed this site are open and answer without a
+              key — draws, blocks, base fee, tokenised equities. Every response
+              reports the tier that served it and what is left of the allowance.
             </p>
-            <pre className="mt-3 overflow-x-auto border border-[color:var(--color-border)] bg-[color:var(--color-bg)] p-3 text-[11px] leading-relaxed text-[color:var(--color-fg)]">
-{`x-ratelimit-tier: anonymous
-x-ratelimit-limit: 300
-x-ratelimit-remaining: 297
-x-ratelimit-reset: 1785200000`}
-            </pre>
             <p className="mt-3 text-[12px] leading-relaxed text-[color:var(--color-dim)]">
-              Over the line the endpoint answers 429 with{" "}
-              <span className="text-[color:var(--color-fg)]">retry-after</span>{" "}
-              and an ok flag of false, in the same JSON shape as everything
-              else. The full picture is on{" "}
+              Limits and keys are on{" "}
               <Link
                 href="/tiers"
                 className="text-[color:var(--color-accent)] hover:underline"
               >
                 the tiers page
               </Link>
+              . Upstream health is on{" "}
+              <Link
+                href="/status"
+                className="text-[color:var(--color-accent)] hover:underline"
+              >
+                status
+              </Link>
               .
             </p>
           </div>
-
           <div className="bg-[color:var(--color-surface)] p-5 sm:p-6">
             <h2 className="h-display text-[13px] text-[color:var(--color-accent)]">
-              Keys
+              Talking to the node directly
             </h2>
             <p className="mt-3 text-[13px] leading-relaxed text-[color:var(--color-dim)]">
-              A key raises the ceiling and identifies the caller rather than
-              the address they happen to sit behind. There is no account
-              attached to one, nothing is asked for to get one, and only a
-              hash of it is ever stored.
+              Nothing here is required. The chain&rsquo;s own RPC serves every
+              read this site makes.
             </p>
-            <p className="mt-3 text-[13px] leading-relaxed text-[color:var(--color-dim)]">
-              Send it as{" "}
-              <span className="text-[color:var(--color-fg)]">x-pylon-key</span>{" "}
-              or as{" "}
-              <span className="text-[color:var(--color-fg)]">?key=</span>. Ask{" "}
-              <span className="text-[color:var(--color-fg)]">GET /api/keys</span>{" "}
-              which tier you are on. Nothing here is paid, and nothing on this
-              site can take a payment.
+            <Endpoint
+              url={RPC_URL}
+              method="POST"
+              note="JSON-RPC 2.0. A browser GET sends an empty body and the node answers with a parse error — send a POST."
+              className="mt-3"
+            />
+            <p className="mt-3 text-[12px] leading-relaxed text-[color:var(--color-dim)]">
+              Randomness comes from{" "}
+              <a
+                href={DICE_SITE}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-[color:var(--color-accent)] hover:underline"
+              >
+                Dice Protocol ↗
+              </a>
+              , whose oracle PylonDraw is a customer of.
             </p>
           </div>
-        </div>
-      </section>
-
-      <section className="space-y-6">
-        <h2 className="h-display text-[13px] text-[color:var(--color-accent)]">
-          Endpoints
-        </h2>
-        {endpoints.map((e) => (
-          <div
-            key={e.path}
-            className="border border-[color:var(--color-border)] bg-[color:var(--color-surface)]"
-          >
-            <div className="flex flex-wrap items-baseline gap-3 border-b border-[color:var(--color-border)] px-4 py-3">
-              <span className="border border-[color:var(--color-border)] px-1.5 py-0.5 text-[10px] uppercase tracking-[0.14em] text-[color:var(--color-dim)]">
-                GET
-              </span>
-              <code className="text-[13px] text-[color:var(--color-fg)]">
-                {e.path}
-              </code>
-            </div>
-            <p className="px-4 pt-3 text-[12px] leading-relaxed text-[color:var(--color-dim)]">
-              {e.desc}
-            </p>
-            <pre className="mx-4 my-3 overflow-x-auto border border-[color:var(--color-border)] bg-[color:var(--color-bg)] p-3 text-[11px] leading-relaxed text-[color:var(--color-dim)]">
-              <code>{e.shape}</code>
-            </pre>
-          </div>
-        ))}
-      </section>
-
-      <section>
-        <div className="border border-[color:var(--color-border)] bg-[color:var(--color-surface)] p-5 sm:p-6">
-          <h2 className="h-display text-[13px] text-[color:var(--color-fg)]">
-            Error behaviour
-          </h2>
-          <p className="mt-3 max-w-[76ch] text-[13px] leading-relaxed text-[color:var(--color-dim)]">
-            A handler never returns a 5xx for an upstream failure. It returns{" "}
-            <code className="text-[color:var(--color-fg)]">200</code> with{" "}
-            <code className="text-[color:var(--color-fg)]">
-              {'{ "ok": false, "error": "…" }'}
-            </code>{" "}
-            so the client can distinguish &ldquo;the chain is unreachable&rdquo;
-            from &ldquo;the request was malformed&rdquo; and render the{" "}
-            <span className="text-[color:var(--color-fg)]">feed offline</span>{" "}
-            state instead of a crash. Arrays come back empty rather than
-            missing.
-          </p>
-          <p className="mt-3 max-w-[76ch] text-[13px] leading-relaxed text-[color:var(--color-dim)]">
-            Chain id is {CHAIN.id}. All wei values are integers. Timestamps are
-            Unix seconds except <code className="text-[color:var(--color-fg)]">ts</code>,
-            which is milliseconds and marks when the response was assembled.
-          </p>
         </div>
       </section>
     </PageShell>

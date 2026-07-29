@@ -54,6 +54,7 @@ export const NAV = [
   { label: "Draws", href: "/draws" },
   { label: "Commit a list", href: "/create" },
   { label: "Docs", href: "/docs" },
+  { label: "SDK", href: "/sdk" },
   { label: "Dashboard", href: "/app" },
   { label: "About", href: "/about" },
 ];

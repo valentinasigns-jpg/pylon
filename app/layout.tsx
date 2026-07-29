@@ -29,23 +29,23 @@ const siteUrl = process.env.VERCEL_PROJECT_PRODUCTION_URL
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
   title: {
-    default: "PYLON — Every block on Robinhood Chain, as it lands",
+    default: "PYLON — Prove the draw wasn't rigged",
     template: "%s — PYLON",
   },
   description:
-    "A public, read-only dashboard for Robinhood Chain. Live blocks, gas, and tokenized equities. No login, no wallet, no tracking.",
+    "Verifiable winner selection for giveaways and airdrops on Robinhood Chain. Commit a list, draw with an oracle nobody controls, and let anyone recompute the result offline.",
   openGraph: {
-    title: "PYLON — Every block on Robinhood Chain, as it lands",
+    title: "PYLON — Prove the draw wasn't rigged",
     description:
-      "Live blocks, gas and tokenized equities on Robinhood Chain. Public data, read-only.",
+      "Commit a list of entrants, draw from it with an oracle nobody controls, and let anyone recompute the winners offline.",
     siteName: "PYLON",
     type: "website",
   },
   twitter: {
     card: "summary_large_image",
-    title: "PYLON — Every block on Robinhood Chain, as it lands",
+    title: "PYLON — Prove the draw wasn't rigged",
     description:
-      "Live blocks, gas and tokenized equities on Robinhood Chain. Public data, read-only.",
+      "Commit a list of entrants, draw from it with an oracle nobody controls, and let anyone recompute the winners offline.",
   },
 };
 

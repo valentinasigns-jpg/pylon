@@ -10,6 +10,12 @@
   --color-dim: #7a7a7a;
   --color-accent: #00ff9c;
   --color-warn: #ff4d4d;
+  /* The one colour this palette gained. A draw sits in "requested" for a
+     second or two while the oracle answers, and that is neither running
+     nor finished — green would claim a result that has not arrived and red
+     would claim a failure that has not happened. Used for waiting, and
+     for nothing else. */
+  --color-wait: #ffb020;
 
   --font-mono: var(--font-jetbrains), ui-monospace, "SFMono-Regular", monospace;
 

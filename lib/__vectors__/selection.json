@@ -1,0 +1,90 @@
+[
+  {
+    "n": 20,
+    "k": 3,
+    "seed": "a",
+    "randomValue": "0x3ac225168df54212a25c1c01fd35bebfea408fdac2e31ddd6f80a4bbf9a5f1cb",
+    "winners": [
+      8,
+      6,
+      17
+    ]
+  },
+  {
+    "n": 50,
+    "k": 10,
+    "seed": "b",
+    "randomValue": "0xb5553de315e0edf504d9150af82dafa5c4667fa618ed0a6f19c69b41166c5510",
+    "winners": [
+      17,
+      5,
+      25,
+      34,
+      49,
+      10,
+      47,
+      29,
+      12,
+      21
+    ]
+  },
+  {
+    "n": 1000,
+    "k": 25,
+    "seed": "zzz",
+    "randomValue": "0xaaeb548a149a78dfc2f2d4e6838f5cba9f65c55bcefa06258e77335cf32b4452",
+    "winners": [
+      363,
+      357,
+      314,
+      475,
+      471,
+      299,
+      120,
+      128,
+      106,
+      154,
+      158,
+      665,
+      42,
+      592,
+      47,
+      188,
+      843,
+      456,
+      71,
+      935,
+      36,
+      335,
+      51,
+      628,
+      637
+    ]
+  },
+  {
+    "n": 9,
+    "k": 9,
+    "seed": "a",
+    "randomValue": "0x3ac225168df54212a25c1c01fd35bebfea408fdac2e31ddd6f80a4bbf9a5f1cb",
+    "winners": [
+      6,
+      1,
+      8,
+      4,
+      3,
+      2,
+      0,
+      7,
+      5
+    ]
+  },
+  {
+    "n": 2,
+    "k": 1,
+    "seed": "x",
+    "randomValue": "0x7521d1cadbcfa91eec65aa16715b94ffc1c9654ba57ea2ef1a2127bca1127a83",
+    "winners": [
+      1
+    ]
+  }
+]

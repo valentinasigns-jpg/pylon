@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { PageShell } from "@/components/page-shell";
-import { WPylonMast } from "@/components/w-pylon-mast";
+import { WCommitReveal } from "@/components/w-commit-reveal";
 import { CodeBlock, Step, QA } from "@/components/code-block";
 import { Endpoint } from "@/components/endpoint";
 import { CHAIN, RPC_URL, BLOCKSCOUT } from "@/lib/config";
@@ -106,7 +106,7 @@ export default function DocsPage() {
     <PageShell
       title="Docs"
       lede="Three calls, one pure function, and a list you publish yourself. Everything a verifier needs is on chain or in that file — nothing about checking a draw goes through this site."
-      aside={<WPylonMast />}
+      aside={<WCommitReveal />}
     >
       <section>
         <h2 className="h-display mb-3 text-[11px] uppercase tracking-[0.14em] text-[color:var(--color-dim)]">
@@ -127,7 +127,7 @@ export default function DocsPage() {
                   </a>
                 ) : (
                   <span className="text-[color:var(--color-wait)]">
-                    not deployed — source is in the{" "}
+                    soon — source is in the{" "}
                     <a
                       href={DRAW_REPO}
                       target="_blank"

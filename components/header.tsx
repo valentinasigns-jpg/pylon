@@ -3,13 +3,10 @@
 import { useState } from "react";
 import Link from "next/link";
 import { Menu, X } from "lucide-react";
-import { NAV } from "@/lib/config";
-import { usePoll } from "@/lib/use-poll";
-import { LivePill } from "./primitives";
+import { NAV, GITHUB_URL, X_HANDLE } from "@/lib/config";
 
 export function Header() {
   const [open, setOpen] = useState(false);
-  const { live, settled, reason } = usePoll<{ ok: boolean }>("/api/chain");
 
   return (
     <header className="sticky top-0 z-50 border-b border-[color:var(--color-border)] bg-[color:var(--color-bg)]/92 backdrop-blur">
@@ -43,38 +40,37 @@ export function Header() {
           </nav>
         </div>
 
-        <div className="flex shrink-0 items-center gap-2.5">
-          <span className="hidden sm:block">
-            {settled ? (
-              <LivePill live={live} reason={reason} />
-            ) : (
-              <span className="inline-flex items-center gap-2 border border-[color:var(--color-border)] px-2 py-1 text-[10px] uppercase tracking-[0.14em] text-[color:var(--color-dim)]">
-                <span className="h-1.5 w-1.5 bg-[color:var(--color-dim)]" />
-                connecting
-              </span>
-            )}
-          </span>
+        <div className="flex shrink-0 items-center gap-2">
+          {/* Top right is for getting out of here — the source and the
+              account. The live pill used to sit here, reporting on a chain
+              this site no longer exists to report on; the panels that
+              actually depend on a feed still carry their own. */}
+          <a
+            href={GITHUB_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="GitHub"
+            title="GitHub"
+            className="grid h-8 w-8 place-items-center border border-[color:var(--color-border)] text-[color:var(--color-dim)] transition-colors hover:border-[color:var(--color-accent)] hover:text-[color:var(--color-accent)]"
+          >
+            <GitHubGlyph />
+          </a>
 
-          {/* Ticker slot. There is no token yet, and an inert $PYLON chip
-              reads as a broken button rather than as a placeholder. When one
-              exists, it goes back here:
-
-              <span className="hidden border border-[color:var(--color-border)] px-2 py-1 text-[11px] text-[color:var(--color-dim)] lg:inline-block">
-                $PYLON
-              </span>
-          */}
-
-          {/* No X link until there is an X account. A button pointing at
-              x.com/PLACEHOLDER is a dead link and a placeholder shipped to
-              production, and the quality bar for this project forbids both.
-              Restore this, with the real handle in lib/config.ts:
-
-              <a href={X_HANDLE} target="_blank" rel="noopener noreferrer"
-                 aria-label="X"
-                 className="grid h-8 w-8 place-items-center border border-[color:var(--color-border)] text-[color:var(--color-dim)] hover:border-[color:var(--color-accent)] hover:text-[color:var(--color-accent)]">
-                <XGlyph />
-              </a>
-          */}
+          {/* Rendered only once there is an account to point at. A button
+              leading to a placeholder is a dead link, and a dead link in the
+              header is the worst place to keep one. */}
+          {X_HANDLE && (
+            <a
+              href={X_HANDLE}
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="X"
+              title="X"
+              className="grid h-8 w-8 place-items-center border border-[color:var(--color-border)] text-[color:var(--color-dim)] transition-colors hover:border-[color:var(--color-accent)] hover:text-[color:var(--color-accent)]"
+            >
+              <XGlyph />
+            </a>
+          )}
 
           <button
             type="button"
@@ -131,6 +127,22 @@ function PylonMark() {
         strokeWidth="0.8"
         opacity="0.5"
       />
+    </svg>
+  );
+}
+
+function GitHubGlyph() {
+  return (
+    <svg viewBox="0 0 16 16" fill="currentColor" className="h-4 w-4" aria-hidden>
+      <path d="M8 0C3.58 0 0 3.58 0 8a8 8 0 0 0 5.47 7.59c.4.07.55-.17.55-.38l-.01-1.49c-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82a7.4 7.4 0 0 1 2-.27c.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48l-.01 2.19c0 .21.15.46.55.38A8 8 0 0 0 16 8c0-4.42-3.58-8-8-8Z" />
+    </svg>
+  );
+}
+
+function XGlyph() {
+  return (
+    <svg viewBox="0 0 24 24" fill="currentColor" className="h-3.5 w-3.5" aria-hidden>
+      <path d="M18.244 2H21l-6.56 7.5L22.5 22h-6.9l-4.54-6.03L5.9 22H3.14l7.03-8.03L2.5 2h7.03l4.11 5.48L18.24 2zm-1.21 18.4h1.9L7.06 3.5H5.06l11.97 16.9z" />
     </svg>
   );
 }

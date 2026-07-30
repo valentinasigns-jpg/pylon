@@ -3,7 +3,7 @@ import Link from "next/link";
 import { PageShell } from "@/components/page-shell";
 import { DrawList } from "@/components/draw-list";
 import { Verifier } from "@/components/verifier";
-import { WPylonMast } from "@/components/w-pylon-mast";
+import { WDrawField } from "@/components/w-draw-field";
 import { CHAIN } from "@/lib/config";
 
 export const metadata: Metadata = {
@@ -17,7 +17,7 @@ export default function DrawsPage() {
     <PageShell
       title="Draws"
       lede={`Every draw anyone has created, read from ${CHAIN.name} at request time. There is no database behind this page and nothing is curated — a draw appears here because it exists, not because someone decided to show it.`}
-      aside={<WPylonMast />}
+      aside={<WDrawField />}
     >
       <DrawList />
 

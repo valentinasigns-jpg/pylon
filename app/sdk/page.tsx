@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { PageShell } from "@/components/page-shell";
-import { WPylonMast } from "@/components/w-pylon-mast";
+import { WProofPath } from "@/components/w-proof-path";
 import { CodeBlock } from "@/components/code-block";
 import { DRAW_REPO, DICE_SITE } from "@/lib/draw";
 
@@ -64,7 +64,7 @@ export default function SdkPage() {
     <PageShell
       title="SDK"
       lede="Everything needed to build a commitment, recompute a draw and check a proof — none of it requiring a network, a key or this site. That is the whole design brief."
-      aside={<WPylonMast />}
+      aside={<WProofPath />}
     >
       <section>
         <h2 className="h-display mb-3 text-lg text-[color:var(--color-fg)] sm:text-xl">

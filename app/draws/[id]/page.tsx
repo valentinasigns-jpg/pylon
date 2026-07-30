@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { PageShell } from "@/components/page-shell";
 import { DrawDetail } from "@/components/draw-detail";
-import { WPylonMast } from "@/components/w-pylon-mast";
+import { WProofPath } from "@/components/w-proof-path";
 
 export async function generateMetadata({
   params,
@@ -48,7 +48,7 @@ export default async function DrawPage({
     <PageShell
       title={`Draw #${n}`}
       lede="What was fixed before the randomness existed, what came back, and everything you need to recompute the result without believing a word of this page."
-      aside={<WPylonMast />}
+      aside={<WProofPath />}
     >
       <DrawDetail id={n} />
 

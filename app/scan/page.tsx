@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { PageShell } from "@/components/page-shell";
 import { ScanPanel } from "@/components/scan-panel";
-import { WPylonMast } from "@/components/w-pylon-mast";
+import { WMerkleTree } from "@/components/w-merkle-tree";
 import { REGISTRY_URL } from "@/lib/canonical";
 import { CHAIN, BLOCKSCOUT } from "@/lib/config";
 
@@ -23,7 +23,7 @@ export default async function ScanPage({
     <PageShell
       title="Check a token"
       lede={`Paste a contract address on ${CHAIN.name}. PYLON reads what the public sources say about it — who deployed it, when, whether the source is verified, what the code can do, and how concentrated the holdings are — and prints each answer next to where it came from.`}
-      aside={<WPylonMast />}
+      aside={<WMerkleTree />}
     >
       <ScanPanel initial={address ?? ""} />
 

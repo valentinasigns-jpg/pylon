@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { PageShell } from "@/components/page-shell";
-import { WPylonMast } from "@/components/w-pylon-mast";
+import { WCommitReveal } from "@/components/w-commit-reveal";
 import { ACTIVE_TIERS, PLANNED_TIERS } from "@/lib/tiers";
 import { ISSUANCE_ENABLED } from "@/lib/api-keys";
 
@@ -16,7 +16,7 @@ export default function TiersPage() {
     <PageShell
       title="Tiers"
       lede="Every endpoint answers without a key. A key raises the ceiling and identifies the caller rather than the address they happen to be behind. Nothing on this page is for sale, and nothing on this site can take a payment."
-      aside={<WPylonMast />}
+      aside={<WCommitReveal />}
     >
       <section>
         <h2 className="h-display mb-3 text-[13px] text-[color:var(--color-accent)]">

@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { PageShell } from "@/components/page-shell";
 import { CreateForm } from "@/components/create-form";
-import { WPylonMast } from "@/components/w-pylon-mast";
+import { WMerkleTree } from "@/components/w-merkle-tree";
 import { PROTOCOL_FEE_ETH, DRAW_ADDRESS } from "@/lib/draw";
 
 export const metadata: Metadata = {
@@ -16,7 +16,7 @@ export default function CreatePage() {
     <PageShell
       title="Commit a list"
       lede="Paste the entrants, set the terms, and take away a root and a transaction to send. The list is hashed in this tab and never uploaded — this page has no server to upload it to."
-      aside={<WPylonMast />}
+      aside={<WMerkleTree />}
     >
       <CreateForm />
 

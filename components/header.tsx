@@ -56,10 +56,12 @@ export function Header() {
             <GitHubGlyph />
           </a>
 
-          {/* Rendered only once there is an account to point at. A button
-              leading to a placeholder is a dead link, and a dead link in the
-              header is the worst place to keep one. */}
-          {X_HANDLE && (
+          {/* The account. Until there is a handle it is present but inert:
+              the pair should look finished, and a box that leads nowhere is
+              worse than a box that says it is not ready yet. Same "soon" the
+              rest of the site uses for things that exist but are not live.
+              Set X_HANDLE and it becomes a link with no other change. */}
+          {X_HANDLE ? (
             <a
               href={X_HANDLE}
               target="_blank"
@@ -70,6 +72,14 @@ export function Header() {
             >
               <XGlyph />
             </a>
+          ) : (
+            <span
+              aria-label="X — soon"
+              title="X — soon"
+              className="grid h-8 w-8 cursor-default place-items-center border border-[color:var(--color-border)] text-[color:var(--color-dim)]/70"
+            >
+              <XGlyph />
+            </span>
           )}
 
           <button
@@ -139,9 +149,15 @@ function GitHubGlyph() {
   );
 }
 
+/**
+ * Sized to match the GitHub mark's box rather than its ink. The octocat is
+ * effectively a filled disc and this is four thin strokes, so they will
+ * never weigh the same — sharing a footprint is what makes them read as a
+ * pair.
+ */
 function XGlyph() {
   return (
-    <svg viewBox="0 0 24 24" fill="currentColor" className="h-3.5 w-3.5" aria-hidden>
+    <svg viewBox="0 0 24 24" fill="currentColor" className="h-4 w-4" aria-hidden>
       <path d="M18.244 2H21l-6.56 7.5L22.5 22h-6.9l-4.54-6.03L5.9 22H3.14l7.03-8.03L2.5 2h7.03l4.11 5.48L18.24 2zm-1.21 18.4h1.9L7.06 3.5H5.06l11.97 16.9z" />
     </svg>
   );

@@ -44,7 +44,7 @@ async function probeDraw(): Promise<Probe> {
       url: "",
       status: "not-deployed",
       latencyMs: null,
-      detail: "no address configured — the contract has not been deployed",
+      detail: "soon — written and tested, not yet live",
     };
   }
   const t0 = Date.now();

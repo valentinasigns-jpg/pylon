@@ -78,11 +78,11 @@ export default function Home() {
                 ) : (
                   <>
                     <div className="mt-2 text-[13px] text-[color:var(--color-wait)]">
-                      not deployed yet
+                      soon
                     </div>
                     <p className="mt-2 text-[11px] leading-relaxed text-[color:var(--color-dim)]">
-                      The contract is written, compiled and covered by tests —
-                      it is in the{" "}
+                      Written, compiled, 24 tests passing — every line of it is
+                      in the{" "}
                       <a
                         href={DRAW_REPO}
                         target="_blank"
@@ -90,10 +90,8 @@ export default function Home() {
                         className="text-[color:var(--color-accent)] hover:underline"
                       >
                         repository
-                      </a>{" "}
-                      and you can read every line of it. What has not happened
-                      is a deployment, so there is no address to show and this
-                      page will not invent one.
+                      </a>
+                      . The address appears here the day it goes live.
                     </p>
                   </>
                 )}

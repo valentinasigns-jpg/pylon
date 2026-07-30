@@ -286,7 +286,7 @@ export function CreateForm() {
                 </div>
 
                 <dl className="border-t border-[color:var(--color-border)] pt-3 text-[12px]">
-                  <Line k="to" v={DRAW_ADDRESS ?? "— not deployed yet"} wait={!DRAW_ADDRESS} />
+                  <Line k="to" v={DRAW_ADDRESS ?? "soon — the contract is not live yet"} wait={!DRAW_ADDRESS} />
                   <Line k="value" v={`${PROTOCOL_FEE_ETH} ETH`} />
                   <Line k="entrants" v={num(entrants.length)} />
                   <Line k="winners" v={num(k)} />

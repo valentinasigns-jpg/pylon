@@ -45,7 +45,7 @@ export default function CreatePage() {
               <span className="text-[color:var(--color-fg)]">
                 {PROTOCOL_FEE_ETH} ETH
               </span>
-              {DRAW_ADDRESS ? " to the contract." : " to the contract once one is deployed."}
+              {DRAW_ADDRESS ? " to the contract." : " to the contract, once it is live."}
             </p>
           </div>
           <div className="bg-[color:var(--color-surface)] p-5 sm:p-6">

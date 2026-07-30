@@ -77,10 +77,12 @@ export function DrawDetail({ id }: { id: number }) {
               : "text-[color:var(--color-fg)]"
           }`}
         >
-          {notDeployed ? "The contract is not deployed" : `No draw number ${id}`}
+          {notDeployed ? "Contract: soon" : `No draw number ${id}`}
         </div>
         <p className="mt-3 max-w-[76ch] text-[13px] leading-relaxed text-[color:var(--color-dim)]">
-          {data?.error ?? "Nothing came back."}
+          {notDeployed
+            ? "Individual draws open here once the contract is live. The verifier below works today — give it a list and a random value from anywhere."
+            : (data?.error ?? "Nothing came back.")}
         </p>
       </div>
     );
